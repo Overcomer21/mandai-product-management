@@ -1,0 +1,94 @@
+
+# ==========================================
+# Mandai Merchandise - Git Ignore
+# ==========================================
+
+# Environment variables and secrets
+.env
+**/.env
+.env.*
+**/.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+
+# SQL Server database files
+*.mdf
+*.ldf
+*.ndf
+
+# Flutter backup cache
+**/.dart_tool_backup/
+
+# Python / FastAPI
+**/__pycache__/
+**/.pytest_cache/
+**/.venv/
+venv/
+*.py[cod]
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+
+# Archive and compressed files
+*.zip
+**/*.zip
+
+# Local databases and backups
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.bak
+*.bak.*
+*.backup
+
+# Flutter / Dart
+.dart_tool/
+**/.dart_tool/
+.flutter-plugins*
+**/.flutter-plugins*
+.packages
+.pub-cache/
+.pub/
+build/
+**/build/
+coverage/
+
+# Android local configuration
+**/android/local.properties
+**/.gradle/
+*.jks
+*.keystore
+key.properties
+
+# IDE and editor
+.idea/
+.vscode/
+.vs/
+*.iml
+
+# Temporary and generated files
+__azurite_db_*
+*.tmp
+*.temp
+*.log
+*.pid
+
+# Local test result backups
+test-results-backup-*/
+**/test-results-backup-*/
+
+# Operating system
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Keep project documentation and test evidence
+!README.md
+!SPEC.md
+!ARCHITECTURE.md
+!CODE_REVIEW.md

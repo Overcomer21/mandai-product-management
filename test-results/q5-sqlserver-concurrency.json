@@ -1,0 +1,75 @@
+{
+  "run_id": "b8be1d7862c4",
+  "executed_at": "2026-10-30T08:28:05.717+00:00",
+  "testing_status": "PASS",
+  "passed": 6,
+  "failed": 0,
+  "results": [
+    {
+      "test_case": "Valid Checkout and Atomic Inventory Decrement",
+      "transaction_id": "test-b8be1d7862c4-valid",
+      "testing_status": "PASS",
+      "transaction_status": "Completed",
+      "expected_result": "One order committed, stock reduced exactly once",
+      "details": "Order count=1, remaining stock=1, replayed=False",
+      "order_id": 157,
+      "executed_at": "2026-10-30T08:28:05.986+00:00",
+      "duration_ms": 66.87
+    },
+    {
+      "test_case": "Duplicate Transaction / Idempotent Retry",
+      "transaction_id": "test-b8be1d7862c4-valid",
+      "testing_status": "PASS",
+      "transaction_status": "Completed \u2014 Idempotent Replay",
+      "expected_result": "Original order returned, no duplicate order or stock deduction",
+      "details": "Same key replayed; order count=1; stock=1",
+      "order_id": 157,
+      "executed_at": "2026-10-30T08:28:06.053+00:00",
+      "duration_ms": 24.36
+    },
+    {
+      "test_case": "Same Transaction Key with Changed Payload",
+      "transaction_id": "test-b8be1d7862c4-valid",
+      "testing_status": "PASS",
+      "transaction_status": "Rejected \u2014 Duplicate Transaction",
+      "expected_result": "HTTP 409 and no second order",
+      "details": "Idempotency key used with different checkout",
+      "order_id": null,
+      "executed_at": "2026-10-30T08:28:06.077+00:00",
+      "duration_ms": 14.94
+    },
+    {
+      "test_case": "Out-of-Stock Transaction Rollback",
+      "transaction_id": "test-b8be1d7862c4-stock0",
+      "testing_status": "PASS",
+      "transaction_status": "Rolled Back \u2014 Insufficient Stock",
+      "expected_result": "HTTP 409, no order persisted, stock unchanged",
+      "details": "Insufficient stock for product 73; stock=0; persisted orders=0",
+      "order_id": null,
+      "executed_at": "2026-10-30T08:28:06.095+00:00",
+      "duration_ms": 23.82
+    },
+    {
+      "test_case": "Two Concurrent Checkouts for Last Stock Unit",
+      "transaction_id": "test-b8be1d7862c4-race-a | test-b8be1d7862c4-race-b",
+      "testing_status": "PASS",
+      "transaction_status": "Completed + Rolled Back \u2014 Insufficient Stock",
+      "expected_result": "Exactly one completed, one stock rejection, never negative stock",
+      "details": "Outcomes=[('Completed', {'order_id': 159, 'status': 'completed', 'subtotal': '7.00', 'delivery_fee': '4.90', 'total_amount': '11.90', 'payment_status': 'approved_demo', 'replayed': False}), ('Rejected \u2014 HTTP 409', 'Insufficient stock for product 74')]; persisted orders=1; final stock=0",
+      "order_id": null,
+      "executed_at": "2026-10-30T08:28:06.121+00:00",
+      "duration_ms": 24.47
+    },
+    {
+      "test_case": "Card Number Luhn Checksum (Synthetic Test Data)",
+      "transaction_id": "test-b8be1d7862c4-luhn",
+      "testing_status": "PASS",
+      "transaction_status": "Validation Completed",
+      "expected_result": "Known valid number accepted; invalid checksum rejected",
+      "details": "Synthetic test-only PANs; no payment details collected or charged",
+      "order_id": null,
+      "executed_at": "2026-10-30T08:28:06.145+00:00",
+      "duration_ms": 0.03
+    }
+  ]
+}

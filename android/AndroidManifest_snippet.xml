@@ -1,0 +1,9 @@
+<!-- Add INSIDE your existing MainActivity <activity> in android/app/src/main/AndroidManifest.xml.
+     Do not replace your manifest or existing intent filters. -->
+<meta-data android:name="flutter_deeplinking_enabled" android:value="false" />
+<intent-filter android:autoVerify="false">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="mandai-merchandise" android:host="payment-return" />
+</intent-filter>
