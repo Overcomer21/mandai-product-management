@@ -1,0 +1,172 @@
+{
+  "run_id": "7e1775eda521",
+  "database": "MandaiDB",
+  "executed_at": "2026-10-31T00:17:57.509064+00:00",
+  "status": "PASS",
+  "cleanup_verified": true,
+  "cleanup_error": null,
+  "iterations_completed": 10,
+  "iterations_requested": 10,
+  "results": [
+    {
+      "iteration": 1,
+      "status": "PASS",
+      "buyers": 100,
+      "initial_stock": 30,
+      "outcomes": {
+        "success": 30,
+        "out_of_stock": 70
+      },
+      "remaining_stock": 0,
+      "persisted_orders": 30,
+      "sold_units": 30,
+      "approved_demo_payments": 30,
+      "elapsed_seconds": 0.42,
+      "errors": []
+    },
+    {
+      "iteration": 2,
+      "status": "PASS",
+      "buyers": 100,
+      "initial_stock": 30,
+      "outcomes": {
+        "success": 30,
+        "out_of_stock": 70
+      },
+      "remaining_stock": 0,
+      "persisted_orders": 30,
+      "sold_units": 30,
+      "approved_demo_payments": 30,
+      "elapsed_seconds": 0.46,
+      "errors": []
+    },
+    {
+      "iteration": 3,
+      "status": "PASS",
+      "buyers": 100,
+      "initial_stock": 30,
+      "outcomes": {
+        "success": 30,
+        "out_of_stock": 70
+      },
+      "remaining_stock": 0,
+      "persisted_orders": 30,
+      "sold_units": 30,
+      "approved_demo_payments": 30,
+      "elapsed_seconds": 0.63,
+      "errors": []
+    },
+    {
+      "iteration": 4,
+      "status": "PASS",
+      "buyers": 100,
+      "initial_stock": 30,
+      "outcomes": {
+        "success": 30,
+        "out_of_stock": 70
+      },
+      "remaining_stock": 0,
+      "persisted_orders": 30,
+      "sold_units": 30,
+      "approved_demo_payments": 30,
+      "elapsed_seconds": 0.4,
+      "errors": []
+    },
+    {
+      "iteration": 5,
+      "status": "PASS",
+      "buyers": 100,
+      "initial_stock": 30,
+      "outcomes": {
+        "success": 30,
+        "out_of_stock": 70
+      },
+      "remaining_stock": 0,
+      "persisted_orders": 30,
+      "sold_units": 30,
+      "approved_demo_payments": 30,
+      "elapsed_seconds": 0.73,
+      "errors": []
+    },
+    {
+      "iteration": 6,
+      "status": "PASS",
+      "buyers": 100,
+      "initial_stock": 30,
+      "outcomes": {
+        "success": 30,
+        "out_of_stock": 70
+      },
+      "remaining_stock": 0,
+      "persisted_orders": 30,
+      "sold_units": 30,
+      "approved_demo_payments": 30,
+      "elapsed_seconds": 0.63,
+      "errors": []
+    },
+    {
+      "iteration": 7,
+      "status": "PASS",
+      "buyers": 100,
+      "initial_stock": 30,
+      "outcomes": {
+        "success": 30,
+        "out_of_stock": 70
+      },
+      "remaining_stock": 0,
+      "persisted_orders": 30,
+      "sold_units": 30,
+      "approved_demo_payments": 30,
+      "elapsed_seconds": 0.46,
+      "errors": []
+    },
+    {
+      "iteration": 8,
+      "status": "PASS",
+      "buyers": 100,
+      "initial_stock": 30,
+      "outcomes": {
+        "success": 30,
+        "out_of_stock": 70
+      },
+      "remaining_stock": 0,
+      "persisted_orders": 30,
+      "sold_units": 30,
+      "approved_demo_payments": 30,
+      "elapsed_seconds": 0.41,
+      "errors": []
+    },
+    {
+      "iteration": 9,
+      "status": "PASS",
+      "buyers": 100,
+      "initial_stock": 30,
+      "outcomes": {
+        "success": 30,
+        "out_of_stock": 70
+      },
+      "remaining_stock": 0,
+      "persisted_orders": 30,
+      "sold_units": 30,
+      "approved_demo_payments": 30,
+      "elapsed_seconds": 0.38,
+      "errors": []
+    },
+    {
+      "iteration": 10,
+      "status": "PASS",
+      "buyers": 100,
+      "initial_stock": 30,
+      "outcomes": {
+        "success": 30,
+        "out_of_stock": 70
+      },
+      "remaining_stock": 0,
+      "persisted_orders": 30,
+      "sold_units": 30,
+      "approved_demo_payments": 30,
+      "elapsed_seconds": 0.52,
+      "errors": []
+    }
+  ]
+}
