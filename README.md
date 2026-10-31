@@ -126,6 +126,11 @@ The project also includes optional Stripe Checkout, payment status, and return e
 - Use HTTPS, secret management, secure token storage, and validated Stripe webhooks before production deployment.
 - Flutter layouts aim to adapt to desktop and mobile screens; all platform-specific behavior still needs separate verification.
 
+## Video Demo
+
+- [Mandai Merchandise App Demo](VideoDemo/Mandai_Merchandise_App_Demo.mp4)
+- [Mandai Merchandise App Lazy Loading Demo](VideoDemo/Mandai_Merchandise_App_LazyLoading.mp4)
+
 ## Documentation
 
 - [`SPEC.md`](SPEC.md) — Scope, features, and assessment acceptance criteria.
@@ -133,7 +138,6 @@ The project also includes optional Stripe Checkout, payment status, and return e
 - [`APPLICATION_ACCEPTANCE_TEST_RESULTS.md`](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) — AC01–AC08 acceptance criteria verification, automated test evidence, comprehensive 100-buyer concurrency testing, overselling prevention, 2,022-product catalog verification, combined SQL benchmark, API load testing, and overall test results.
 - [`LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md`](LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md) — Catalog filtering, sorting, pagination, SQL Server indexing, and 40-execution combined SQL performance benchmark.
 - [`MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md`](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md) — Product catalog API load testing, including Nginx load balancing, five FastAPI instances, and k6 ramp-up tests up to 700 virtual users.
-- [`ADAPTIVE_PAGINATION_ENGINEERING_NOTES.md`](ADAPTIVE_PAGINATION_ENGINEERING_NOTES.md) — Engineering notes for catalog pagination and incremental loading.
 
 **Assessment scope:** This is a demonstration project; it is not an official product or a claim of production readiness.
 
