@@ -41,7 +41,7 @@ Run the commands from the repository root unless otherwise noted. Confirm the sc
 
 Use an existing SQL Server instance and the project's database setup/migration scripts as appropriate. Configure the backend to connect to **`MandaiDB`**. Ensure its login has only the necessary permissions.
 
-**Important:** Do not rerun database creation, product seeding, destructive cleanup, or concurrency test scripts against an existing `MandaiDB` containing master or transaction data you need to preserve. Use a dedicated test database for data-changing tests.
+**Important:** Do not rerun database creation, product seeding, or destructive cleanup against an existing `MandaiDB` containing data you need to preserve. Prefer an isolated test database for data-changing tests. The dedicated Q5 concurrency script is explicitly gated for `MandaiDB`; run it only with authorization and safeguards for disposable test records, and never modify existing master product data.
 
 ### 2. Start FastAPI (PowerShell)
 
@@ -93,7 +93,13 @@ flutter analyze
 flutter test
 ```
 
-Additional SQL Server integration/concurrent-purchase and API stress tests are included in the assessment evidence. Run data-changing integration or concurrency tests **only against an isolated test database and test accounts**, not the retained `MandaiDB` master dataset. A previously reported concurrency check verified 20 simultaneous purchase attempts against stock 10 with 10 successful purchases and 10 conflicts, without overselling; this is historical test evidence, not a new test run.
+Additional SQL Server integration tests, concurrency checks, and read-only API stress tests are documented in the [Application Acceptance Test Results](APPLICATION_ACCEPTANCE_TEST_RESULTS.md). The dedicated SQL Server concurrency tests use disposable test records; do not alter retained master product data. Prefer an isolated database for general integration testing. The explicitly gated Q5 test below was run against `MandaiDB` and reported successful cleanup. Its cleanup status does not replace independent review of database changes.
+
+### Comprehensive Concurrent Overselling Prevention Test
+
+**PASS — No overselling observed in 1,000 concurrent purchase attempts.** The SQL Server test executed **100 concurrent buyers across 10 iterations**, with 30 units of test stock per iteration. Results: **300 successful purchases**, **700 expected out-of-stock rejections**, **zero reported errors**, and consistent inventory, order, and demo-payment records. All **10/10 iterations passed**, and the test reported successful cleanup. These results demonstrate overselling prevention under the tested concurrency conditions, not a guarantee for every production scenario.
+
+**Detailed results and evidence:** [Application Acceptance Test Results](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) · [`q5-100-buyers-concurrency.json`](test-results/q5-100-buyers-concurrency.json).
 
 Testing does not imply validation of every target device or production payment certification.
 
@@ -124,5 +130,10 @@ The project also includes optional Stripe Checkout, payment status, and return e
 
 - [`SPEC.md`](SPEC.md) — Scope, features, and assessment acceptance criteria.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — Architecture principles, database integrity, transactions, concurrency, security, payments, and technical trade-offs.
+- [`APPLICATION_ACCEPTANCE_TEST_RESULTS.md`](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) — AC01–AC08 acceptance criteria verification, automated test evidence, comprehensive 100-buyer concurrency testing, overselling prevention, and overall test results.
 
 **Assessment scope:** This is a demonstration project; it is not an official product or a claim of production readiness.
+
+## Author
+
+Yongky
