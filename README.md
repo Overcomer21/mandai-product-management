@@ -97,7 +97,7 @@ Additional SQL Server integration tests, concurrency checks, and read-only API s
 
 ### Comprehensive Concurrent Overselling Prevention Test
 
-**PASS — No overselling observed in 1,000 concurrent purchase attempts.** The SQL Server test executed **100 concurrent buyers across 10 iterations**, with 30 units of test stock per iteration. Results: **300 successful purchases**, **700 expected out-of-stock rejections**, **zero reported errors**, and consistent inventory, order, and demo-payment records. All **10/10 iterations passed**, and the test reported successful cleanup. These results demonstrate effective overselling prevention under the tested concurrency conditions. Additional testing across different workloads, system configurations, and failure scenarios may be required to establish production readiness.
+**PASS — No overselling observed in 1,000 concurrent purchase attempts.** The SQL Server test executed **100 concurrent buyers across 10 iterations**, with 30 units of test stock per iteration. Results: **300 successful purchases**, **700 expected out-of-stock rejections**, **zero reported errors**, and consistent inventory, order, and demo-payment records. All **10/10 iterations passed**, and the test reported successful cleanup. These results demonstrate overselling prevention under the tested concurrency conditions, not a guarantee for every production scenario.
 
 **Detailed results and evidence:** [Application Acceptance Test Results](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) · [`q5-100-buyers-concurrency.json`](test-results/q5-100-buyers-concurrency.json).
 
@@ -130,7 +130,10 @@ The project also includes optional Stripe Checkout, payment status, and return e
 
 - [`SPEC.md`](SPEC.md) — Scope, features, and assessment acceptance criteria.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — Architecture principles, database integrity, transactions, concurrency, security, payments, and technical trade-offs.
-- [`APPLICATION_ACCEPTANCE_TEST_RESULTS.md`](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) — AC01–AC08 acceptance criteria verification, automated test evidence, comprehensive 100-buyer concurrency testing, overselling prevention, and overall test results.
+- [`APPLICATION_ACCEPTANCE_TEST_RESULTS.md`](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) — AC01–AC08 acceptance criteria verification, automated test evidence, comprehensive 100-buyer concurrency testing, overselling prevention, 2,022-product catalog verification, combined SQL benchmark, API load testing, and overall test results.
+- [`LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md`](LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md) — Catalog filtering, sorting, pagination, SQL Server indexing, and 40-execution combined SQL performance benchmark.
+- [`MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md`](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md) — Product catalog API load testing, including Nginx load balancing, five FastAPI instances, and k6 ramp-up tests up to 700 virtual users.
+- [`ADAPTIVE_PAGINATION_ENGINEERING_NOTES.md`](ADAPTIVE_PAGINATION_ENGINEERING_NOTES.md) — Engineering notes for catalog pagination and incremental loading.
 
 **Assessment scope:** This is a demonstration project; it is not an official product or a claim of production readiness.
 

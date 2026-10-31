@@ -136,7 +136,52 @@ Testing was conducted to verify application functionality, reliability, data int
 
 **Scope and data safety:** This test validates concurrent purchase/checkout processing, inventory consistency, and SQL Server transaction integrity using demo payment records. HTTP endpoint throughput and live Stripe payment processing are outside the scope of this test and are assessed separately where applicable. The script reported successful cleanup of disposable test data; independent database verification may be performed to confirm that retained master records remain unchanged. Testing against `MandaiDB` requires explicit authorization and must be restricted to disposable test records without modifying existing master product data. **Additional validation across different workloads, deployment configurations, and failure scenarios may be required to establish production readiness.**
 
-## 3. Overall Test Results
+## 3. Product Catalog, Lazy Loading and Performance Verification
+
+The following catalog and performance results extend the evidence supporting **AC02 (Backend REST API)** and **AC04 (Customer-Facing Storefront)**. They are reported as separate performance test activities rather than additional numbered acceptance criteria.
+
+### Product Catalog and Incremental Loading
+
+- **Catalog dataset:** 2,022 product items reported in `MandaiDB`.
+- **Implementation:** FastAPI provides server-side category and stock filtering, search, sorting, and `limit`/`offset` pagination. Flutter retrieves catalog data incrementally for browsing and scrolling.
+- **Supported ordering:** Default, Name, Price low, and Price high.
+- **Database indexes:** `PK_Products` (`Id`), `IX_Products_Name_Id` (`Name`, `Id`), `IX_Products_Price_Id` (`Price`, `Id`), and `IX_Products_IsActive_Category` (`IsActive`, `Category`).
+- **Observation:** Category-filter responsiveness improved after the active-category index was added. This is a qualitative observation; a numeric before-and-after UI benchmark was not recorded.
+
+### Combined Category, Sorting and Pagination SQL Benchmark
+
+**PASS — 40 of 40 read-only SQL executions completed.** Eight combinations were each executed five times. Measurements below are SQL benchmark elapsed times in milliseconds (ms).
+
+| Category | Sorting | Minimum | Average | Maximum |
+|---|---|---:|---:|---:|
+| All | Default | 3 ms | 6.60 ms | 18 ms |
+| All | Name | 2 ms | 2.40 ms | 3 ms |
+| All | Price low | 2 ms | 3.60 ms | 5 ms |
+| All | Price high | 2 ms | 3.00 ms | 4 ms |
+| Apparel | Default | 1 ms | 1.20 ms | 2 ms |
+| Apparel | Name | 1 ms | 2.20 ms | 3 ms |
+| Apparel | Price low | 1 ms | 1.80 ms | 3 ms |
+| Apparel | Price high | 1 ms | 1.80 ms | 2 ms |
+
+**Summary:** Minimum 1 ms; maximum 18 ms; overall average **2.83 ms**, rounded from eight equally weighted five-run scenario averages. The benchmark used conditional `CASE` ordering and counted rows from a paginated subquery. It is a SQL-level comparison rather than an exact replay of the SQLAlchemy-generated API query or a Flutter rendering measurement.
+
+Detailed report: [`LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md`](LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md).
+
+### Product Catalog API Gradual Ramp-Up Load Test
+
+**PASS — Three reported read-only API ramp-up scenarios**, using Grafana k6, NGINX in Docker Desktop, and five FastAPI/Uvicorn instances on a local development laptop. The tested endpoint was `GET /api/products?limit=10&offset=0`.
+
+| Peak virtual users | HTTP requests | Failed HTTP requests | Response checks | Average throughput | P95 latency |
+|---:|---:|---:|---:|---:|---:|
+| 300 | 30,404 | 0 | 100% | 434.26 RPS | 1.11 s |
+| 500 | 31,763 | 0 | 100% | 453.63 RPS | 1.53 s |
+| 700 | 27,691 | 0 | 100% | 395.52 RPS | 2.45 s |
+
+At 700 virtual users, the reported P95 of 2.45 seconds met the internally selected 3.5-second benchmark. **Virtual users are k6 HTTP clients, rather than a verified number of simultaneous Flutter shoppers.** These results apply to read-only API traffic in the tested local configuration; production readiness requires testing against actual production data volumes, workloads, hardware, network, and deployment configuration.
+
+Detailed report: [`MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md`](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md). Supporting k6 JSON evidence is referenced in that report; its contents should be checked against the recorded figures before publication.
+
+## 4. Overall Test Results
 
 | Test Category | Recorded Result |
 |---|---|
@@ -147,12 +192,14 @@ Testing was conducted to verify application functionality, reliability, data int
 | Flutter unit and widget tests | 8 PASS |
 | Flutter static analysis | PASS |
 | Read-only API stress test — 1,000 requests | 1,000 successful, 0 errors |
+| Catalog combined SQL benchmark — 2,022-item dataset | 40/40 executions; 1–18 ms; 2.83 ms overall average |
+| Catalog API k6 gradual ramp-up — up to 700 VUs | 3 reported scenarios PASS; 0 HTTP failures; 700-VU P95 2.45 s |
 | Stripe Test Mode checkout and payment persistence | PASS — previously verified |
 
 **Evidence note:** This report summarizes previously reported execution results and assertions inspected in the supplied test files. The newly added comprehensive concurrency result is taken from the user-provided console output of an executed run; other results remain from previously reported executions and reviewed test sources. The tests were **not independently re-executed** while editing this document. Figures from separate test runs are not combined into a single aggregate pass count. A `PASS` on an individual mapping reflects the earlier reported test outcome, not a new independent run.
 
-## 4. Final Conclusion
+## 5. Final Conclusion
 
-**All eight core implementation acceptance criteria (AC01–AC08) are supported by the recorded testing evidence.** Frontend tests, backend API tests, SQL Server integration tests, security checks, concurrency tests (including the 1,000-attempt SQL Server run), and API stress testing cover the core functional workflows. Authentication, authorization, idempotency, rollback, inventory integrity, race-condition controls, and overselling prevention were validated for the scenarios tested.
+**All eight core implementation acceptance criteria (AC01–AC08) are supported by the recorded testing evidence.** Frontend tests, backend API tests, SQL Server integration tests, security checks, concurrency tests (including the 1,000-attempt SQL Server run), API stress testing, and catalog performance benchmarks cover the core functional workflows and the tested read-only catalog workload. Authentication, authorization, idempotency, rollback, inventory integrity, race-condition controls, and overselling prevention were validated for the scenarios tested.
 
 This assessment concerns the eight implementation criteria; repository publication and documentation submission are separate delivery requirements.
