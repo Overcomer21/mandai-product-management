@@ -97,7 +97,7 @@ Additional SQL Server integration tests, concurrency checks, and read-only API s
 
 ### Comprehensive Concurrent Overselling Prevention Test
 
-**PASS — No overselling observed in 1,000 concurrent purchase attempts.** The SQL Server test executed **100 concurrent buyers across 10 iterations**, with 30 units of test stock per iteration. Results: **300 successful purchases**, **700 expected out-of-stock rejections**, **zero reported errors**, and consistent inventory, order, and demo-payment records. All **10/10 iterations passed**, and the test reported successful cleanup. These results demonstrate overselling prevention under the tested concurrency conditions, not a guarantee for every production scenario.
+**PASS — No overselling observed in 1,000 concurrent purchase attempts.** The SQL Server test executed **100 concurrent buyers across 10 iterations**, with 30 units of test stock per iteration. Results: **300 successful purchases**, **700 expected out-of-stock rejections**, **zero reported errors**, and consistent inventory, order, and demo-payment records. All **10/10 iterations passed**, and the test reported successful cleanup. These results demonstrate effective overselling prevention under the tested concurrency conditions. Additional testing across different workloads, system configurations, and failure scenarios may be required to establish production readiness.
 
 **Detailed results and evidence:** [Application Acceptance Test Results](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) · [`q5-100-buyers-concurrency.json`](test-results/q5-100-buyers-concurrency.json).
 
