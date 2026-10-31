@@ -27,11 +27,16 @@ class _CommerceMediaDialogState extends State<CommerceMediaDialog> {
     final base = Uri.tryParse(widget.apiBase);
     final parsed = Uri.tryParse(value.replaceAll(String.fromCharCode(92), '/'));
     if (base == null || !base.hasAuthority || parsed == null) return value;
-    if (parsed.hasScheme && (parsed.scheme == 'https' || parsed.scheme == 'http')) {
-      if (parsed.host == 'localhost' || parsed.host == '127.0.0.1' ||
+    if (parsed.hasScheme &&
+        (parsed.scheme == 'https' || parsed.scheme == 'http')) {
+      if (parsed.host == 'localhost' ||
+          parsed.host == '127.0.0.1' ||
           parsed.host == '10.0.2.2') {
-        return base.resolveUri(Uri(path: parsed.path,
-          query: parsed.hasQuery ? parsed.query : null)).toString();
+        return base
+            .resolveUri(Uri(
+                path: parsed.path,
+                query: parsed.hasQuery ? parsed.query : null))
+            .toString();
       }
       return parsed.toString();
     }
@@ -121,12 +126,13 @@ class _CommerceMediaDialogState extends State<CommerceMediaDialog> {
                         child: current.isEmpty
                             ? const Center(
                                 child: Icon(Icons.image_outlined, size: 64))
-                            : Image.network(_url(current),
-                                fit: BoxFit.contain,
+                            : Image.network(_url(current), fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) {
-                                  debugPrint('Product viewer image failed: ${_url(current)} — $error');
-                                  return Image.asset(widget.fallbackAsset, fit: BoxFit.contain);
-                                })),
+                                debugPrint(
+                                    'Product viewer image failed: ${_url(current)} — $error');
+                                return Image.asset(widget.fallbackAsset,
+                                    fit: BoxFit.contain);
+                              })),
                   ),
                 ),
               ),

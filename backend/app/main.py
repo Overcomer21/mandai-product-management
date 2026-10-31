@@ -4,9 +4,9 @@ import logging
 import os
 import uuid
 from decimal import Decimal
-from fastapi import FastAPI, Depends, HTTPException, Header, Request
+from fastapi import FastAPI, Depends, HTTPException, Header, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import select, update, delete, exists, text
+from sqlalchemy import select, update, delete, exists, text, or_, func, case
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 from .database import get_db
@@ -56,19 +56,64 @@ def current_account(user: User = Depends(current_user)):
         'payment_method': user.payment_method,
     }
 
+@app.get('/api/products/categories', response_model=list[str])
+def catalog_categories(db: Session = Depends(get_db)):
+    return list(db.scalars(select(Product.category).where(Product.is_active == True)
+                           .distinct().order_by(Product.category)).all())
+
+
+def _filtered_catalog_statement(category: str | None, search: str | None, in_stock: bool):
+    """Single source of truth for customer catalogue and count filters."""
+    stmt = select(Product).where(Product.is_active == True)
+    if category and category != 'All':
+        stmt = stmt.where(Product.category == category)
+    if search and search.strip():
+        needle = search.strip().lower()
+        # SQLAlchemy parameterizes LIKE expressions; escape wildcards for literal searches.
+        needle = needle.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+        match = f'%{needle}%'
+        stmt = stmt.where(or_(func.lower(Product.name).like(match, escape='\\'),
+                              func.lower(Product.category).like(match, escape='\\'),
+                              func.lower(Product.description).like(match, escape='\\')))
+    if in_stock:
+        stmt = stmt.where(Product.stock > 0)
+    return stmt
+
+
+@app.get('/api/products/count')
+def catalog_count(
+    db: Session = Depends(get_db),
+    category: str | None = Query(default=None, max_length=100),
+    search: str | None = Query(default=None, max_length=160),
+    in_stock: bool = Query(default=False),
+):
+    stmt = _filtered_catalog_statement(category, search, in_stock)
+    count_stmt = select(func.count()).select_from(stmt.order_by(None).subquery())
+    return {'total': db.scalar(count_stmt) or 0}
+
+
 @app.get('/api/products', response_model=list[ProductOut])
-def catalog(db: Session = Depends(get_db)):
-    # Use the injectable DB dependency so SQLite tests and production share the
-    # same access path. Materialize DTOs before releasing the connection.
-    try:
-        products = db.scalars(
-            select(Product).where(Product.is_active == True).order_by(Product.id)
-        ).all()
-        return [ProductOut.model_validate(product, from_attributes=True) for product in products]
-    finally:
-        # FastAPI's dependency finalizer will close it again (safe/idempotent).
-        # Early close avoids holding the connection during response serialization.
-        db.close()
+def catalog(
+    db: Session = Depends(get_db),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    category: str | None = Query(default=None, max_length=100),
+    search: str | None = Query(default=None, max_length=160),
+    in_stock: bool = Query(default=False),
+    sort: str = Query(default='Default', pattern='^(Default|Name|Price low|Price high)$'),
+):
+    stmt = _filtered_catalog_statement(category, search, in_stock)
+    if sort == 'Name':
+        stmt = stmt.order_by(Product.name, Product.id)
+    elif sort == 'Price low':
+        stmt = stmt.order_by(Product.price.asc(), Product.id)
+    elif sort == 'Price high':
+        stmt = stmt.order_by(Product.price.desc(), Product.id)
+    else:
+        stmt = stmt.order_by(Product.id)
+    rows = db.scalars(stmt.offset(offset).limit(limit)).all()
+    return [ProductOut.model_validate(p, from_attributes=True) for p in rows]
+
 
 @app.get('/api/products/{product_id}',response_model=ProductOut)
 def product_detail(product_id:int,db:Session=Depends(get_db)):
@@ -76,9 +121,71 @@ def product_detail(product_id:int,db:Session=Depends(get_db)):
     if not product or not product.is_active:raise HTTPException(404,'Product not found')
     return product
 
+def _admin_product_statement(category: str | None, search: str | None, in_stock: bool):
+    # Admin inventory includes inactive products; customer catalogue does not.
+    stmt = select(Product)
+    if category and category != 'All':
+        stmt = stmt.where(Product.category == category)
+    if search and search.strip():
+        needle = search.strip().lower().replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+        match = f'%{needle}%'
+        stmt = stmt.where(or_(func.lower(Product.name).like(match, escape='\\'),
+                              func.lower(Product.category).like(match, escape='\\'),
+                              func.lower(Product.description).like(match, escape='\\')))
+    if in_stock:
+        stmt = stmt.where(Product.stock > 0)
+    return stmt
+
+
+@app.get('/api/admin/products/count')
+def admin_products_count(
+    db: Session = Depends(get_db), _admin: User = Depends(admin_only),
+    category: str | None = Query(default=None, max_length=100),
+    search: str | None = Query(default=None, max_length=160),
+    in_stock: bool = Query(default=False),
+):
+    stmt = _admin_product_statement(category, search, in_stock)
+    return {'total': db.scalar(select(func.count()).select_from(stmt.order_by(None).subquery())) or 0}
+
+
+@app.get('/api/admin/products/categories', response_model=list[str])
+def admin_products_categories(db: Session = Depends(get_db), _admin: User = Depends(admin_only)):
+    return list(db.scalars(select(Product.category).distinct().order_by(Product.category)).all())
+
+
+@app.get('/api/admin/products/stats')
+def admin_products_stats(db: Session = Depends(get_db), _admin: User = Depends(admin_only)):
+    total, active, stock = db.execute(select(
+        func.count(Product.id),
+        func.sum(case((Product.is_active == True, 1), else_=0)),
+        func.sum(Product.stock),
+    )).one()
+    return {'total': int(total or 0), 'active': int(active or 0), 'stock': int(stock or 0)}
+
+
 @app.get('/api/admin/products',response_model=list[ProductOut])
-def admin_list(db:Session=Depends(get_db),_admin:User=Depends(admin_only)):
-    return db.scalars(select(Product).order_by(Product.id)).all()
+def admin_list(
+    db: Session = Depends(get_db), _admin: User = Depends(admin_only),
+    limit: int | None = Query(default=None, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    category: str | None = Query(default=None, max_length=100),
+    search: str | None = Query(default=None, max_length=160),
+    in_stock: bool = Query(default=False),
+    sort: str = Query(default='Default', pattern='^(Default|Name|Price low|Price high)$'),
+):
+    # Backwards-compatible: callers without limit still receive the full list.
+    stmt = _admin_product_statement(category, search, in_stock)
+    if sort == 'Name':
+        stmt = stmt.order_by(Product.name, Product.id)
+    elif sort == 'Price low':
+        stmt = stmt.order_by(Product.price.asc(), Product.id)
+    elif sort == 'Price high':
+        stmt = stmt.order_by(Product.price.desc(), Product.id)
+    else:
+        stmt = stmt.order_by(Product.id)
+    if limit is not None:
+        stmt = stmt.offset(offset).limit(limit)
+    return db.scalars(stmt).all()
 
 @app.get('/api/admin/products/{product_id}',response_model=ProductOut)
 def admin_detail(product_id:int,db:Session=Depends(get_db),_admin:User=Depends(admin_only)):
