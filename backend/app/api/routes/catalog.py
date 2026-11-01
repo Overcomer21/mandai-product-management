@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select, update, delete, exists, text, or_, func, case
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
-from ...database import get_db, SessionLocal
+from ...database import get_db
 from ...models import User, Product, Order, OrderItem, Payment
 from ...schemas import ProductInput, ProductOut, Login, PurchaseInput, PurchaseOut, CheckoutInput
 from ...security import current_user, admin_only, verify_password, issue_token
@@ -38,11 +38,10 @@ def catalog_count(db: Session=Depends(get_db), category: str | None=Query(defaul
     return {'total': _read_service(db).count(CatalogFilter(category, search, in_stock))}
 
 @router_segment_2.get('/api/products', response_model=list[ProductOut])
-def catalog(limit: int=Query(default=20, ge=1, le=100), offset: int=Query(default=0, ge=0), category: str | None=Query(default=None, max_length=100), search: str | None=Query(default=None, max_length=160), in_stock: bool=Query(default=False), sort: str=Query(default='Default', pattern='^(Default|Name|Price low|Price high)$')):
-    # Keep the database session scoped to the read operation only.
-    # page() returns detached ProductSnapshot values; no ORM access is needed afterward.
-    with SessionLocal() as db:
-        products = _read_service(db).page(CatalogFilter(category, search, in_stock), limit, offset, sort)
+def catalog(limit: int=Query(default=20, ge=1, le=100), offset: int=Query(default=0, ge=0), category: str | None=Query(default=None, max_length=100), search: str | None=Query(default=None, max_length=160), in_stock: bool=Query(default=False), sort: str=Query(default='Default', pattern='^(Default|Name|Price low|Price high)$'), db: Session=Depends(get_db)):
+    # Use the request-scoped session provided by get_db (including test overrides).
+    # page() returns ProductSnapshot values, so response conversion does not require ORM lazy loading.
+    products = _read_service(db).page(CatalogFilter(category, search, in_stock), limit, offset, sort)
     return [ProductOut.model_validate(vars(product)) for product in products]
 
 @router_segment_2.get('/api/products/{product_id}', response_model=ProductOut)
