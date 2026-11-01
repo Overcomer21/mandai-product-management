@@ -1,0 +1,37 @@
+{
+  "target": "http://127.0.0.1:51871/api/products",
+  "endpoint": "/api/products",
+  "thresholds": {
+    "max_error_rate_pct": 0.0,
+    "max_p95_ms": 2500.0
+  },
+  "stages": [
+    {
+      "concurrency": 1100,
+      "requests": 1100,
+      "success": 1100,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "elapsed_s": 2.06,
+      "throughput_rps": 532.74,
+      "latency_ms": {
+        "p50": 780.65,
+        "p95": 965.33,
+        "p99": 986.57,
+        "max": 1004.79
+      },
+      "http_statuses": {
+        "200": 1100
+      },
+      "error_samples": [],
+      "pass": true
+    }
+  ],
+  "recovery_health": {
+    "status": 200,
+    "latency_ms": 15.97,
+    "pass": true
+  },
+  "overall_pass": true,
+  "notes": "Read-only test. Does not validate payment writes, webhook idempotency, SQL Server transaction concurrency, or Stripe provider capacity."
+}

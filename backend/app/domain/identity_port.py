@@ -1,0 +1,6 @@
+"""Feature-specific application boundary: no framework/database imports."""
+from typing import Protocol, Any
+
+class IdentityPort(Protocol):
+    def login(self, **kwargs: Any) -> Any: ...
+    def current_account(self, **kwargs: Any) -> Any: ...

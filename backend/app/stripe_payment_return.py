@@ -63,12 +63,18 @@ def browser_return(outcome: str, session_id: str = ''):
 <p>Returning to the Mandai app. Payment status will be verified securely in the app.</p>
 <p><a href="{escaped_app}">Open Mandai Merchandise app</a></p>
 {web_button}
+<p id="web-close" hidden>You can close this payment tab and return to your existing Mandai Merchandise tab to check payment status.</p>
 <p>If the app does not open automatically, tap the link above, or return to Orders and select Verify / Resume Stripe.</p>
 <script nonce="{nonce}">
 (function () {{
   // Chrome/Android may require a user gesture; manual link remains available.
   if (/Android/i.test(navigator.userAgent)) {{
     window.location.assign({script_url});
+  }} else {{
+    // Web desktop: never navigate to Flutter Web, which could reset in-memory state.
+    // Chrome only allows closing tabs created by a script in supported circumstances.
+    document.getElementById('web-close').hidden = false;
+    window.close();
   }}
 }})();
 </script>

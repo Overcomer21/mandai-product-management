@@ -138,8 +138,13 @@ The following indexes are present on `dbo.Products` in `MandaiDB`:
 | `IX_Products_Name_Id` | `Name, Id` | Name ordering with deterministic ID tie-break |
 | `IX_Products_Price_Id` | `Price, Id` | Price ordering with deterministic ID tie-break |
 | `IX_Products_IsActive_Category` | `IsActive, Category` | Filtering active products by category |
+| `IX_Products_Category_Active_Price` | `Category, IsActive, Price` | Category/active filtering with price ordering |
 
-These are ordinary SQL Server indexes, not indexed views. Their actual use depends on the SQL Server query optimizer and query shape. The category index was added to support category selection without changing product master data.
+These are ordinary SQL Server indexes, not indexed views. Their actual use depends on the SQL Server query optimizer and query shape. The additional `IX_Products_Category_Active_Price` nonclustered index was created to support category/active filtering and price ordering without changing product master data.
+
+### Local API Pagination Benchmark — After Index Addition (1 Nov 2026)
+
+**PASS — 50/50 read-only requests**, following five warm-up calls. Local FastAPI `GET /api/products?category=Apparel&sort=Price%20low&limit=20&offset=0` returned an average of **5.13 ms**, median **4.88 ms**, P95 **7.51 ms**, and **0 request failures** (minimum 4.28 ms; maximum 9.39 ms). These are sequential PowerShell client-side HTTP timings, not concurrent-user or Flutter rendering measurements. The new composite nonclustered index was present during the test; its selection by the SQL optimizer was not verified. No matched pre-index HTTP baseline is available, so the results do not establish an index-caused speedup.
 
 ### Combined-query SQL benchmark
 
@@ -222,8 +227,9 @@ Engineering evidence includes:
 | Area | Evidence available | Scope |
 | --- | --- | --- |
 | Catalog API | Reviewed FastAPI endpoint signature and SQLAlchemy ordering/pagination logic | Server-side filter/sort/pagination behavior |
-| SQL Server indexes | SSMS index inventory and active-category index creation | Four named indexes on `dbo.Products` |
+| SQL Server indexes | SSMS index inventory and active-category index creation | Five named indexes on `dbo.Products` |
 | Combined SQL performance | 8 scenarios × 5 runs, 40 executions | Synthetic read-only SQL benchmark; 1–18 ms, weighted average 2.83 ms |
+| Local API pagination (after index addition) | 50 sequential requests after five warm-ups | 50 PASS; average 5.13 ms; P95 7.51 ms; no matched before-index HTTP baseline |
 | Read-only HTTP stress | Five concurrency stages, 200 requests each, zero errors | Up to 100 simulated concurrent users, approximately 330 RPS at the highest stage |
 | Purchase concurrency | Concurrency test, 20 requests against stock of 10 | 10 accepted and 10 rejected; no overselling in that scenario |
 | Flutter | Static analysis and unit/widget test results measured during development | 8 tests passed in the measured run; end-to-end UI latency measured separately if required |

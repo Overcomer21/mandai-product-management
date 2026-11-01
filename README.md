@@ -138,7 +138,7 @@ The project also includes optional Stripe Checkout, payment status, and return e
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — Architecture principles, database integrity, transactions, concurrency, security, payments, and technical trade-offs.
 - [`APPLICATION_ACCEPTANCE_TEST_RESULTS.md`](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) — AC01–AC08 acceptance criteria verification, automated test evidence, comprehensive 100-buyer concurrency testing, overselling prevention, 2,022-product catalog verification, combined SQL benchmark, API load testing, and overall test results.
 - [`LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md`](LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md) — Catalog filtering, sorting, pagination, SQL Server indexing, and 40-execution combined SQL performance benchmark.
-- [`MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md`](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md) — Product catalog API load testing, including Nginx load balancing, five FastAPI instances, and k6 ramp-up tests up to 700 virtual users.
+- [`MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md`](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md) — Final read-only product catalog API stress testing through 2,000 requests: Python concurrent-request testing and k6 testing paced at 300 RPS using four FastAPI instances behind NGINX. A separate five-instance k6 ramp-up test through 700 VUs is documented in the architecture report.
 
 **Assessment scope:** This is a demonstration project; it is not an official product or a claim of production readiness.
 

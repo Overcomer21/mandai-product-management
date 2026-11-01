@@ -2,7 +2,7 @@
 
 **Assessment:** Question 5 — Full-Stack Product Management  
 **Test Coverage:** AC01–AC08  
-**Overall Result:** All eight core implementation acceptance criteria are reported as **PASS**, based on previously recorded executions and review of the supplied test source files.
+**Overall Result:** All eight core implementation acceptance criteria are **PASS** for the documented test scenarios and recorded evidence.
 
 ## 1. Application Testing Overview
 
@@ -145,7 +145,7 @@ The following catalog and performance results extend the evidence supporting **A
 - **Catalog dataset:** 2,022 product items reported in `MandaiDB`.
 - **Implementation:** FastAPI provides server-side category and stock filtering, search, sorting, and `limit`/`offset` pagination. Flutter retrieves catalog data incrementally for browsing and scrolling.
 - **Supported ordering:** Default, Name, Price low, and Price high.
-- **Database indexes:** `PK_Products` (`Id`), `IX_Products_Name_Id` (`Name`, `Id`), `IX_Products_Price_Id` (`Price`, `Id`), and `IX_Products_IsActive_Category` (`IsActive`, `Category`).
+- **Database indexes:** `PK_Products` (`Id`), `IX_Products_Name_Id` (`Name`, `Id`), `IX_Products_Price_Id` (`Price`, `Id`), `IX_Products_IsActive_Category` (`IsActive`, `Category`), and `IX_Products_Category_Active_Price` (`Category`, `IsActive`, `Price`).
 - **Observation:** Category-filter responsiveness improved after the active-category index was added. This is a qualitative observation; a numeric before-and-after UI benchmark was not recorded.
 
 ### Combined Category, Sorting and Pagination SQL Benchmark
@@ -167,39 +167,41 @@ The following catalog and performance results extend the evidence supporting **A
 
 Detailed report: [`LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md`](LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md).
 
-### Product Catalog API Gradual Ramp-Up Load Test
+### Product Catalog API Stress and k6 Load Tests — Final Results
 
-**PASS — Three reported read-only API ramp-up scenarios**, using Grafana k6, NGINX in Docker Desktop, and five FastAPI/Uvicorn instances on a local development laptop. The tested endpoint was `GET /api/products?limit=10&offset=0`.
+**PASS — Read-only catalog API testing through 2,000 configured users/VUs**, with two distinct load-generation methods.
 
-| Peak virtual users | HTTP requests | Failed HTTP requests | Response checks | Average throughput | P95 latency |
-|---:|---:|---:|---:|---:|---:|
-| 300 | 30,404 | 0 | 100% | 434.26 RPS | 1.11 s |
-| 500 | 31,763 | 0 | 100% | 453.63 RPS | 1.53 s |
-| 700 | 27,691 | 0 | 100% | 395.52 RPS | 2.45 s |
+| Test type | Highest tested level | Successful requests | Errors | Throughput | P95 | Result |
+|---|---:|---:|---:|---:|---:|---|
+| Python concurrent-request stress test | 2,000 concurrent users / 2,000 requests | 2,000/2,000 | 0 | 196.55 RPS | 2,157.45 ms | **PASS** |
+| Grafana k6, limited to 300 RPS | 2,000 configured VUs / 2,000 requests | 2,000/2,000 | 0 | 299.96 RPS | 14.90 ms | **PASS** |
 
-At 700 virtual users, the reported P95 of 2.45 seconds met the internally selected 3.5-second benchmark. **Virtual users are k6 HTTP clients, rather than a verified number of simultaneous Flutter shoppers.** These results apply to read-only API traffic in the tested local configuration; production readiness requires testing against actual production data volumes, workloads, hardware, network, and deployment configuration.
+The Python final evidence comprises **23 passing stages and 21,080 successful requests** at test levels from 10 through 2,000. The k6 rate-limited final evidence comprises **17 passing stages and 20,400 successful requests** at levels from 400 through 2,000. All listed stages satisfy the internal **P95 ≤ 2,500 ms** threshold and 0-error requirement.
 
-Detailed report: [`MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md`](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md). Supporting k6 JSON evidence is referenced in that report; its contents should be checked against the recorded figures before publication.
+The k6 workload sends one GET per VU and paces requests with `--rps 300`: 2,000 configured VUs do **not** mean 2,000 simultaneously active network connections. The Python and k6 latency measures have different boundaries and should be reported separately. These tests cover read-only `GET /api/products` through four FastAPI/Uvicorn instances behind NGINX (`least_conn`) in a local non-production environment.
+
+Detailed final report and per-level JSON evidence: [`MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md`](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md).
 
 ## 4. Overall Test Results
 
 | Test Category | Recorded Result |
 |---|---|
+| Core implementation acceptance criteria (AC01–AC08) | 8 PASS |
 | Backend API / automated tests (default run) | 24 PASS, 9 SKIPPED |
 | SQL Server integration tests (separate opt-in run) | 9 PASS, 1 warning |
 | Dedicated SQL Server concurrency suite | 6 PASS, 0 FAIL |
 | Comprehensive concurrent overselling prevention — 100 buyers × 10 iterations | 10 PASS, 0 FAIL; 1,000 attempts; 300 successful; 700 insufficient-stock rejections; cleanup reported successful |
 | Flutter unit and widget tests | 8 PASS |
 | Flutter static analysis | PASS |
-| Read-only API stress test — 1,000 requests | 1,000 successful, 0 errors |
+| Python read-only API stress test (10–2,000 concurrency levels) | 23 stages PASS; 21,080 successful requests; 0 errors; peak level P95 2,157.45 ms |
+| Grafana k6 read-only API load test (400–2,000 configured VUs; 300 RPS limiter) | 17 stages PASS; 20,400 successful requests; 0 errors; 2,000-VU P95 14.90 ms |
 | Catalog combined SQL benchmark — 2,022-item dataset | 40/40 executions; 1–18 ms; 2.83 ms overall average |
-| Catalog API k6 gradual ramp-up — up to 700 VUs | 3 reported scenarios PASS; 0 HTTP failures; 700-VU P95 2.45 s |
-| Stripe Test Mode checkout and payment persistence | PASS — previously verified |
+| Stripe Test Mode checkout and payment persistence | PASS — recorded functional verification |
 
-**Evidence note:** This report summarizes previously reported execution results and assertions inspected in the supplied test files. The newly added comprehensive concurrency result is taken from the user-provided console output of an executed run; other results remain from previously reported executions and reviewed test sources. The tests were **not independently re-executed** while editing this document. Figures from separate test runs are not combined into a single aggregate pass count. A `PASS` on an individual mapping reflects the earlier reported test outcome, not a new independent run.
+**Evidence scope:** Acceptance, transaction and frontend results follow their recorded test evidence; the load-test totals are calculated from the included final JSON results. Results from independent suites are not combined into a single aggregate pass count, and a reported PASS applies to the particular scenario and test setup described.
 
 ## 5. Final Conclusion
 
-**All eight core implementation acceptance criteria (AC01–AC08) are supported by the recorded testing evidence.** Frontend tests, backend API tests, SQL Server integration tests, security checks, concurrency tests (including the 1,000-attempt SQL Server run), API stress testing, and catalog performance benchmarks cover the core functional workflows and the tested read-only catalog workload. Authentication, authorization, idempotency, rollback, inventory integrity, race-condition controls, and overselling prevention were validated for the scenarios tested.
+**All eight core implementation acceptance criteria (AC01–AC08) are supported by the recorded test evidence for the documented scenarios.** Frontend tests, backend API tests, SQL Server integration tests, security checks, concurrency tests (including the 1,000-attempt SQL Server run), final API load/stress testing, and catalog performance benchmarks cover the core functional workflows and the tested read-only catalog workload. Authentication, authorization, idempotency, rollback, inventory integrity, race-condition controls, and overselling prevention were validated for the scenarios tested.
 
 This assessment concerns the eight implementation criteria; repository publication and documentation submission are separate delivery requirements.

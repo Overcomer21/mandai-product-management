@@ -50,7 +50,7 @@ def run_suite(db: Session) -> dict:
     product_ids = []
     cases = []
     start = datetime.now(timezone.utc)
-    from .main import checkout
+    from .api.routes.orders import checkout
 
     def stamp():
         return datetime.now(timezone.utc).isoformat(timespec='milliseconds')

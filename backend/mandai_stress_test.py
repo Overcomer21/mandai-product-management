@@ -95,8 +95,8 @@ def main():
         levels = [int(x.strip()) for x in args.levels.split(",")]
     except ValueError:
         parser.error("--levels must contain integers")
-    if not levels or any(level < 1 or level > 200 for level in levels):
-        parser.error("Each concurrency level must be between 1 and 200")
+    if not levels or any(level < 1 or level > 100000 for level in levels):
+        parser.error("Each concurrency level must be between 1 and 50000")
     if not 1 <= args.requests_per_level <= 10000 or not 0.1 <= args.timeout <= 60:
         parser.error("Requests per level must be 1..10000 and timeout 0.1..60 seconds")
 

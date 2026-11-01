@@ -25,6 +25,7 @@ The following indexes were verified on dbo.Products:
 - IX_Products_Name_Id: nonclustered index on Name, Id.
 - IX_Products_Price_Id: nonclustered index on Price, Id.
 - IX_Products_IsActive_Category: nonclustered index on IsActive, Category.
+- IX_Products_Category_Active_Price: nonclustered index on Category, IsActive, Price.
 
 The active-category index supports filtering by active status and category. Improved category-filter responsiveness was observed after it was added. This observation was qualitative; a before-and-after UI latency measurement was not recorded.
 
@@ -60,6 +61,12 @@ The recorded milliseconds represent local SQL benchmark elapsed time. FastAPI re
 
 The combined SQL benchmark completed all 40 executions with observed times between 1 and 18 ms. The implemented catalog design combines server-side filtering, sorting, and pagination with incremental Flutter loading. Category-filter responsiveness improved following the active-category index addition.
 
-Production readiness requires further testing using actual production data volumes, workload, hardware, network, SQL Server configuration, and deployment settings. API and Flutter performance should be measured under the intended Docker, Nginx, and FastAPI worker/instance configuration.
+Production readiness requires further testing using actual production data volumes, workload, hardware, network, SQL Server configuration, and deployment settings. Read-only Product Catalog API performance is verified separately under the documented NGINX and four-instance FastAPI setup; this SQL benchmark alone does not establish Flutter rendering or image-loading performance.
 
 Architecture reference: ARCHITECTURE.md
+
+## 6. Related API Load and Stress Evidence
+
+The catalog API has a separate final read-only load and stress report: [`MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md`](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md). The Python concurrent-request and k6 rate-limited measurements do not replace the 40-run SQL pagination/filter/sorting benchmark above and do not, by themselves, validate Flutter lazy-loading rendering.
+
+**Author:** Yongky
