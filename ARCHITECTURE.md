@@ -142,7 +142,7 @@ The following indexes are present on `dbo.Products` in `MandaiDB`:
 
 These are ordinary SQL Server indexes, not indexed views. Their actual use depends on the SQL Server query optimizer and query shape. The additional `IX_Products_Category_Active_Price` nonclustered index was created to support category/active filtering and price ordering without changing product master data.
 
-### Local API Pagination Benchmark — After Index Addition (1 Nov 2026)
+### Final Local API Pagination Benchmark — After Index Addition
 
 **PASS — 50/50 read-only requests**, following five warm-up calls. Local FastAPI `GET /api/products?category=Apparel&sort=Price%20low&limit=20&offset=0` returned an average of **5.13 ms**, median **4.88 ms**, P95 **7.51 ms**, and **0 request failures** (minimum 4.28 ms; maximum 9.39 ms). These are sequential PowerShell client-side HTTP timings, not concurrent-user or Flutter rendering measurements. The new composite nonclustered index was present during the test; its selection by the SQL optimizer was not verified. No matched pre-index HTTP baseline is available, so the results do not establish an index-caused speedup.
 
@@ -202,9 +202,9 @@ Flutter Web / Android / Desktop Clients
 
 ### Production readiness
 
-The deployment approach uses **Docker, Nginx reverse proxy/load balancing, and multiple FastAPI instances/workers**. Nginx in Docker Desktop with five local FastAPI instances has been exercised for read-only API load testing; the production topology remains subject to environment-specific configuration and validation. Production readiness requires further integration, performance, security, failover and load testing using the **actual production dataset and expected user workload, hardware resources, network conditions, SQL Server capacity, and deployment configuration**. Validation should cover Nginx routing, container lifecycle, connection pools, shared media, HTTPS, secrets management and Stripe webhook delivery.
+The deployment approach uses **Docker, Nginx reverse proxy/load balancing, and multiple FastAPI instances/workers**. Nginx with four local FastAPI instances and Redis shared caching has been exercised for read-only API load testing; the production topology remains subject to environment-specific configuration and validation. Production readiness requires further integration, performance, security, failover and load testing using the **actual production dataset and expected user workload, hardware resources, network conditions, SQL Server capacity, and deployment configuration**. Validation should cover Nginx routing, container lifecycle, connection pools, shared media, HTTPS, secrets management and Stripe webhook delivery.
 
-**Evidence status:** Development included a four-worker Uvicorn configuration. A separate local, non-production k6 benchmark used Nginx in Docker Desktop to route requests to five FastAPI/Uvicorn instances (ports 8000–8004). Production containerization, resilience and sizing require validation using the actual production dataset, hardware, traffic and configuration. See [Product Catalog API Load Test Report](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md).
+**Evidence status:** Development included a four-worker Uvicorn configuration. A separate local, non-production benchmark used Nginx to distribute read-only catalog requests across four FastAPI instances with Redis shared caching. Production containerization, resilience and sizing require validation using the actual production dataset, hardware, traffic and configuration. See [Product Catalog API Load Test Report](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md).
 
 ## 10. Direct API Stress Test — Observed Read-Only Throughput
 
@@ -212,9 +212,11 @@ The read-only product catalog endpoint (`GET /api/products`) was tested against 
 
 These figures describe **concurrent request-generation load and measured HTTP throughput** in the tested development configuration. They are separate from SQL-only sorting measurements and Flutter lazy-loading/rendering measurements. They also represent a read-only endpoint, rather than checkout or payment throughput. Production capacity should be established through load testing with the actual dataset, hardware, deployment configuration, request mix, and target response-time requirements.
 
-### Multi-instance Nginx/k6 load-test evidence
+### Multi-instance Nginx and Redis scale-out evidence
 
-A separate local, non-production load test used **Nginx in Docker Desktop** and **five FastAPI/Uvicorn instances** (ports 8000–8004), exercising `GET /api/products?limit=10&offset=0` with gradual ramp-up targets of **300, 500 and 700 virtual users**. The 700-VU run completed **27,691 HTTP requests**, with **zero HTTP request failures**, **395.52 average RPS** and **2.45-second P95 HTTP latency** over the full ramp-up/hold/ramp-down scenario. These are read-only HTTP API measurements, separate from SQL-only benchmarks, adaptive UI batch sizes and Flutter rendering. See [Product Catalog API Load Test Report](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md).
+A separate local, non-production read-only Product Catalog benchmark used **NGINX**, **four FastAPI instances** and **Redis shared caching**. At **200 concurrent virtual users**, the test recorded **PASS: 1,000/1,000 successful HTTP requests**, **zero request failures**, approximately **1,056.17 RPS**, and **486.66 ms P95 latency**. This benchmark does not establish checkout/payment throughput or production capacity.
+
+A separate stress-test scenario exercised **up to 2,000 HTTP requests** with a k6 target of **300 RPS**. This is a request-volume scenario, not a claim of 2,000 concurrent users; its final success and latency figures are not asserted here.
 
 ## 11. Stripe Payment Gateway (Sandbox)
 
@@ -233,7 +235,7 @@ Engineering evidence includes:
 | Read-only HTTP stress | Five concurrency stages, 200 requests each, zero errors | Up to 100 simulated concurrent users, approximately 330 RPS at the highest stage |
 | Purchase concurrency | Concurrency test, 20 requests against stock of 10 | 10 accepted and 10 rejected; no overselling in that scenario |
 | Flutter | Static analysis and unit/widget test results measured during development | 8 tests passed in the measured run; end-to-end UI latency measured separately if required |
-| Nginx and multiple API instances | Local k6 load-test report: Nginx in Docker Desktop, five FastAPI instances, up to 700 VUs | Read-only catalog HTTP traffic; production deployment requires environment-specific validation |
+| Nginx, Redis and multiple API instances | Local read-only benchmark: four FastAPI instances, 200 concurrent users, 1,000/1,000 HTTP requests successful, P95 486.66 ms | Catalog scale-out evidence; production deployment requires environment-specific validation |
 
 Production readiness requires testing under the actual product data volume, traffic patterns, hardware and deployment configuration, including multi-device UI, checkout, webhook retries, security, performance, resilience and monitoring. Configure production HTTPS, secrets management and webhook verification according to the deployment design.
 
@@ -245,13 +247,24 @@ Production readiness requires testing under the actual product data volume, traf
 - **Modular application:** Keeps the focused assessment deployable as a single backend service, with independent worker/instance scaling as a future deployment option.
 - **Soft deactivation:** Supports retention of products referenced by historical transactions where the corresponding backend and database rules are implemented.
 
+## 14. Product Catalog Scale-Out Benchmark and Future Microservices Evolution
 
-## 14. Future Scale-Out Potential — Product Catalog Benchmark
+### Submitted architecture
 
-**Submitted application architecture:** The Mandai Merchandise assessment is a **modular monolithic application**, not a microservices implementation. Its modular organization and application of Clean Architecture principles provide a foundation for future separation of responsibilities. SOLID principles are relevant design goals; full compliance across the codebase has not been independently audited.
+The coding assessment submission remains a **modular monolithic application**, using a shared Flutter frontend, a FastAPI backend and SQL Server (`MandaiDB`). The codebase applies **Clean Architecture principles**, separation of concerns and modular/repository design practices aligned with SOLID principles. These principles support maintainability and potential future service extraction; they do not by themselves establish that the application is already a microservices system.
 
-**Separate proof-of-concept benchmark:** To explore horizontal scaling without changing the submitted monolithic architecture, the read-only Product Catalog API was exercised with **four FastAPI instances** (ports `8100`–`8103`) behind **NGINX** running in Docker Desktop, using **Redis as a shared cache**. Multiple instances of the same API are not, by themselves, separate microservices.
+### Experimental horizontal scale-out benchmark
 
-In the recorded k6 benchmark, **200 concurrent virtual users passed**, with **1,000/1,000 successful HTTP requests**, **zero failures**, **P95 latency of 486.66 ms**, and approximately **1,056 requests per second**. These results describe the specific local benchmark configuration and do not establish a maximum system capacity.
+A separate, local **read-only Product Catalog API benchmark** evaluated horizontal scaling of the existing backend deployment, using:
 
-**Future architecture option:** The application could evolve toward independently deployable services, such as a Product Catalog microservice, with horizontal scaling and Redis shared caching. This would require explicit service boundaries, independent deployment, data ownership and consistency decisions, and additional security, operational and production-load validation. **No microservices architecture is claimed for the submitted application.**
+- **NGINX** for load balancing across **four FastAPI instances**.
+- **Redis** as a shared cache for catalog responses across instances.
+- **SQL Server (`MandaiDB`)** as the authoritative data store.
+
+**Verified benchmark result: PASS — 200 concurrent virtual users, 1,000/1,000 HTTP requests successful, zero request failures, approximately 1,056.17 requests/second and P95 response latency of 486.66 ms.** This result applies to the tested read-only catalog workload and local configuration, not to checkout/payment throughput or production capacity.
+
+A separate read-only stress-test scenario has also been documented with **up to 2,000 HTTP requests** and k6 configured for a target of **300 RPS**. These values describe request volume and target pacing, not 2,000 concurrent users; final success and latency metrics for that scenario are not asserted here.
+
+### Future scalability
+
+The benchmark demonstrates that **multiple instances of the current application can share Redis caching behind a load balancer**. In a future architecture, the Product Catalog domain could be extracted into an **independently deployable microservice**, allowing service-specific horizontal scaling while retaining shared caching where appropriate. This would require explicit service boundaries, independent deployment, data ownership and integration design, plus additional validation. **No microservice extraction is claimed for the submitted assessment.**
