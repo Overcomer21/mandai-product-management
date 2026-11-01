@@ -130,6 +130,7 @@ The project also includes optional Stripe Checkout, payment status, and return e
 
 - [Mandai Merchandise App Demo](VideoDemo/Mandai_Merchandise_App_Demo.mp4)
 - [Mandai Merchandise App Lazy Loading Demo](VideoDemo/Mandai_Merchandise_App_LazyLoading.mp4)
+- [Mandai Merchandise Mobile Lazy Loading Demo](VideoDemo/Mobile_Lazy_Loading.mp4)
 
 ## Documentation
 
@@ -141,6 +142,4 @@ The project also includes optional Stripe Checkout, payment status, and return e
 
 **Assessment scope:** This is a demonstration project; it is not an official product or a claim of production readiness.
 
-## Author
-
-Yongky
+Author: Yongky
