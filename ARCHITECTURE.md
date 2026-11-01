@@ -244,3 +244,14 @@ Production readiness requires testing under the actual product data volume, traf
 - **SQL Server:** Strong transactional integrity for purchase and stock consistency; correct indexing and connection-pool configuration matter under load.
 - **Modular application:** Keeps the focused assessment deployable as a single backend service, with independent worker/instance scaling as a future deployment option.
 - **Soft deactivation:** Supports retention of products referenced by historical transactions where the corresponding backend and database rules are implemented.
+
+
+## 14. Future Scale-Out Potential — Product Catalog Benchmark
+
+**Submitted application architecture:** The Mandai Merchandise assessment is a **modular monolithic application**, not a microservices implementation. Its modular organization and application of Clean Architecture principles provide a foundation for future separation of responsibilities. SOLID principles are relevant design goals; full compliance across the codebase has not been independently audited.
+
+**Separate proof-of-concept benchmark:** To explore horizontal scaling without changing the submitted monolithic architecture, the read-only Product Catalog API was exercised with **four FastAPI instances** (ports `8100`–`8103`) behind **NGINX** running in Docker Desktop, using **Redis as a shared cache**. Multiple instances of the same API are not, by themselves, separate microservices.
+
+In the recorded k6 benchmark, **200 concurrent virtual users passed**, with **1,000/1,000 successful HTTP requests**, **zero failures**, **P95 latency of 486.66 ms**, and approximately **1,056 requests per second**. These results describe the specific local benchmark configuration and do not establish a maximum system capacity.
+
+**Future architecture option:** The application could evolve toward independently deployable services, such as a Product Catalog microservice, with horizontal scaling and Redis shared caching. This would require explicit service boundaries, independent deployment, data ownership and consistency decisions, and additional security, operational and production-load validation. **No microservices architecture is claimed for the submitted application.**
