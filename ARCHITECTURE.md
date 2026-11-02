@@ -5,22 +5,37 @@
 ## 1. Architecture Overview
 
 ```text
-Flutter / Dart UI (Storefront and Admin Dashboard)
-                     |
-                     | REST / JSON
-                     v
-             Python FastAPI
-     Authentication | Products | Purchases
-                     |
-                     v
-          SQL Server (MandaiDB)
-                     |
-             Orders / Inventory
+Flutter storefront / administrator UI
+                 |
+                 v
+       NGINX reverse proxy
+    Docker :8080 / host :52000
+                 |
+        +--------+-------------------+
+        |                            |
+  Catalog GET routes           Auth / admin / checkout /
+        |                      orders / Stripe / media
+        v                            |
+  least_conn upstream                v
+  FastAPI Catalog             Main FastAPI :8000
+  :8100 :8101 :8102 :8103            |
+        |                            |
+        v                            |
+  Shared Redis cache                 |
+        |                            |
+   +----+----+                       |
+   |         |                       |
+  HIT       MISS                     |
+   |         |                       |
+Return     Query MandaiDB <----------+
+cached      and populate cache
+response
 
-        Stripe Test Mode (optional checkout flow)
+MandaiDB is authoritative for catalog, inventory and transactions.
+Stripe Test Mode is handled by the main FastAPI backend.
 ```
 
-The project uses a shared Flutter frontend, FastAPI backend, and SQL Server as the authoritative transaction and inventory database. Frontend code uses modular organization, repositories, and BLoC patterns in selected areas. The architecture description is scoped to the features and evidence reviewed.
+The current development branch uses a shared Flutter frontend, a main FastAPI backend, and a separately runnable read-only Product Catalog FastAPI service behind NGINX. Redis provides shared catalog caching, while SQL Server remains the authoritative transaction and inventory database. Frontend code uses modular organization, repositories, and BLoC patterns in selected areas. The architecture description is scoped to the features and evidence reviewed.
 
 ## 2. Clean Architecture Principles and VGV Engineering Practices
 
@@ -36,7 +51,10 @@ Selected **Very Good Ventures (VGV) engineering practices** include:
 ## 3. Main Components
 
 - **Presentation:** Customer catalog, shopping cart, and administrator dashboard.
-- **API:** Authentication, product catalog, administrator CRUD, purchase, checkout, and order routes.
+- **Main API (port 8000):** Authentication, administrator CRUD, purchases, checkout, orders, Stripe-related routes, product media and health.
+- **Product Catalog service (ports 8100–8103):** Read-only customer catalog endpoints, independently scalable behind NGINX.
+- **NGINX (Docker):** Path-based reverse proxy, `least_conn` catalog balancing, upstream retry/failover and browser CORS handling.
+- **Redis:** Shared cache for read-heavy catalog responses; not a transactional store.
 - **Authorization:** Authenticated endpoints and role checks for administrator-only functions.
 - **Persistence:** SQL Server transactions for stock updates and order recording.
 - **Payments:** Stripe Test Mode integration for demonstrating card-payment workflows.
@@ -77,7 +95,7 @@ CORS governs browser cross-origin access; JWT authentication and backend role ch
 5. Verify affected rows, record the order, and `COMMIT` together as one atomic unit.
 6. Reject insufficient-stock requests and `ROLLBACK` failed transactions, leaving inventory and order data consistent.
 
-Concurrency tests exercised atomic stock updates and transaction handling. A verified test scenario of 20 competing purchase requests against stock of 10 resulted in 10 successful purchases and 10 rejected requests. Server-side validation of price and stock is part of the checkout implementation; broader production concurrency behavior requires representative testing.
+Server-side price and stock validation remain responsibilities of the main transactional backend. Checkout concurrency results are outside the scope of Product Catalog microservice performance evidence.
 
 ## 7. Frontend Architecture: Responsive UI and Lazy Loading
 
@@ -119,7 +137,7 @@ Concurrency tests exercised atomic stock updates and transaction handling. A ver
 - Deterministic ordering uses `Product.id` as the default order or as a tie-breaker for name/price ordering. Offset pagination may shift if records are inserted or removed during browsing; product-ID deduplication reduces repeated display entries but is not a snapshot-isolation mechanism.
 - The administrator catalog and customer catalog may use different loading paths. Customer-facing adaptive pagination is documented separately from administrator CRUD retrieval.
 
-**Verification approach:** Confirm selected batch sizes, offsets, scroll-triggered requests, cancellation/stale-response behavior, filtering across page boundaries, retry handling, and UI frame times against the final application build. These checks complement the measured SQL and API load tests; they are separate from those performance measurements.
+**Verification approach:** Confirm selected batch sizes, offsets, scroll-triggered requests, cancellation/stale-response behavior, filtering across page boundaries, retry handling, and UI frame times against the final application build. These checks are specific to the deployed Product Catalog service.
 
 ### Combined category filtering and sorting
 
@@ -142,129 +160,47 @@ The following indexes are present on `dbo.Products` in `MandaiDB`:
 
 These are ordinary SQL Server indexes, not indexed views. Their actual use depends on the SQL Server query optimizer and query shape. The additional `IX_Products_Category_Active_Price` nonclustered index was created to support category/active filtering and price ordering without changing product master data.
 
-### Final Local API Pagination Benchmark — After Index Addition
+### Performance verification boundary
 
-**PASS — 50/50 read-only requests**, following five warm-up calls. Local FastAPI `GET /api/products?category=Apparel&sort=Price%20low&limit=20&offset=0` returned an average of **5.13 ms**, median **4.88 ms**, P95 **7.51 ms**, and **0 request failures** (minimum 4.28 ms; maximum 9.39 ms). These are sequential PowerShell client-side HTTP timings, not concurrent-user or Flutter rendering measurements. The new composite nonclustered index was present during the test; its selection by the SQL optimizer was not verified. No matched pre-index HTTP baseline is available, so the results do not establish an index-caused speedup.
+The pagination, filtering, sorting and indexing mechanisms above describe the catalog design. Product Catalog performance evidence is scoped to the local NGINX entry point **52000**, catalog instances **8100–8103**, shared Redis caching and `MandaiDB`.
 
-### Combined-query SQL benchmark
+## 9. Implemented Product Catalog Microservice, Redis and NGINX Deployment
 
-A read-only SQL Server benchmark exercised **8 combinations** of category (`All`, `Apparel`) and sorting (`Default`, `Name`, `Price low`, `Price high`), **5 runs per combination** (40 executions total), using paginated queries in a catalog reported to contain **2,022 product items**. The measured average elapsed times ranged from **1.20 to 6.60 ms**; the maximum observed elapsed time was **18 ms**. The overall mean, calculated from eight equally weighted five-run scenario averages, was **2.83 ms** (rounded).
+### Implemented local topology
 
-| Category | Default avg | Name avg | Price low avg | Price high avg |
-| --- | ---: | ---: | ---: | ---: |
-| All | 6.60 ms | 2.40 ms | 3.60 ms | 3.00 ms |
-| Apparel | 1.20 ms | 2.20 ms | 1.80 ms | 1.80 ms |
+The `mandai-redis-microservices` branch separates **customer-facing read-only Product Catalog** traffic from the existing main FastAPI backend. The new catalog entry point is `backend/app/product_catalog_main.py`; Redis caching is implemented in `backend/app/catalog_redis_cache.py`. The canonical NGINX configuration is `backend/catalog-nginx.conf`.
 
-The benchmark used a parameterized-style conditional filter, `CASE` expressions in `ORDER BY`, and `COUNT(*)` over a paginated subquery. **This is a synthetic SQL benchmark.** The actual SQLAlchemy-generated query, full-row retrieval, HTTP response time and Flutter rendering require separate measurements to establish end-to-end latency. Category filtering was observed to be responsive in the running application with the active-category index in place. This observation is qualitative; the SQL benchmark provides the recorded numeric measurements.
+| Component | Current local configuration | Responsibility |
+| --- | --- | --- |
+| Flutter Web | Port 8085 | Storefront and administrator UI |
+| NGINX | Docker container `mandai-catalog-nginx-lb`, container 8080 / host 52000 | Reverse proxy, CORS and catalog load balancing |
+| Product Catalog service | FastAPI processes 8100, 8101, 8102, 8103 | Read-only product catalog and Redis-backed caching |
+| Main FastAPI | Port 8000 | Authentication, administrator CRUD, purchases, orders, checkout, Stripe and product media |
+| Redis | Shared cache (endpoint configuration environment-dependent) | Cache catalog reads; not authoritative storage |
+| SQL Server | Existing `MandaiDB` | Shared authoritative product, stock, order and payment data |
 
-The measured SQL benchmark provides no demonstrated requirement for a SQL View. Further index changes can be evaluated using actual execution plans and endpoint measurements.
+**Routing:** NGINX's `catalog_backend` uses `least_conn` with four catalog upstreams. The current configuration includes `max_fails=30 fail_timeout=5s`, `proxy_next_upstream error timeout`, `proxy_next_upstream_tries 4` and `proxy_next_upstream_timeout 5s`. Specific main-backend paths are proxied to 8000; `/media/` also goes to 8000, with duplicate upstream CORS headers suppressed. These settings provide passive upstream failure detection and retry for eligible failures, rather than active periodic health checks. The `/` fallback routes unmatched paths to the catalog upstream. This preserves the existing admin/transaction behavior and media-serving route.
 
-For the consolidated evidence and test scope, see [Lazy Loading Performance Test Results](LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md).
+**Service boundary:** The catalog service is separated at the FastAPI process and deployment entry-point level, allowing its read-heavy workload to scale without multiplying the main checkout/admin backend. The database is **intentionally shared** for this assessment extension. No independent database ownership, event-driven messaging, Kafka integration, or separate catalog write API is claimed. The catalog service must not be described as responsible for administrator product CRUD or payment processing.
 
-## 9. Deployment Architecture and Production Readiness — Docker, Nginx and FastAPI Scaling
+**Container boundary:** NGINX is running in Docker Desktop. The four catalog backends run as separate FastAPI processes; they are not described as individually containerized. NGINX configuration inside the current container is not backed by a bind mount, so the checked-in `backend/catalog-nginx.conf` must be explicitly supplied on container recreation.
 
-### Application workers and container deployment
+### Redis consistency and operational considerations
 
-- The development configuration used **four Uvicorn worker processes** on one host. Each worker runs as a separate process; aggregate SQL Server connection demand depends on each process's SQLAlchemy pool configuration.
-- **Docker** is the proposed deployment packaging approach for consistent application runtime dependencies and environment-specific configuration. Container health checks form part of the deployment design.
-- **Nginx** was used as a reverse proxy/load balancer in Docker Desktop during local API load testing; a production deployment can use the same architectural pattern with production-specific configuration. Its production configuration can provide TLS termination, upstream request routing and request/timeout controls.
-- The SQL Server database (`MandaiDB`) remains the shared source of truth for product data, orders, inventory and transaction records.
-
-### Proposed containerized deployment topology
-
-```text
-Flutter Web / Android / Desktop Clients
-                  |
-                HTTPS
-                  |
-            Nginx Reverse Proxy
-           /         |         \
-          v          v          v
-    Docker App 1  Docker App 2  Docker App N
-      FastAPI       FastAPI       FastAPI
-      Uvicorn       Uvicorn       Uvicorn
-      workers       workers       workers
-           \         |         /
-              SQL Server
-               MandaiDB
-
-    Stripe Webhooks -> Nginx -> FastAPI -> MandaiDB
-```
-
-### Technical approach
-
-- **Load balancing:** Configure Nginx upstream routing across FastAPI instances, with appropriate health monitoring, trusted proxy headers, TLS certificates and allowed CORS origins. Verify instance failure and recovery behavior in the target deployment.
-- **Worker and connection capacity:** Tune the number of Uvicorn workers, SQLAlchemy pool size, overflow limits and timeouts together, accounting for the total number of containers and SQL Server connection capacity.
-- **Stateless application instances:** Keep transactional business state in shared SQL Server storage. For multiple containers, evaluate shared/object storage for product images and media so each instance serves consistent content.
-- **Concurrent checkout:** Maintain atomic stock updates, database transactions and persistent idempotency records across workers and instances to protect order consistency and prevent overselling.
-- **Stripe webhook processing:** For the proposed multi-instance deployment, route webhook deliveries through Nginx, verify Stripe signatures, and validate persistent event deduplication/idempotency across instances under retry scenarios.
-- **Performance and resilience:** Evaluate throughput, latency, connection-pool behavior, health checks, resource utilization and error rates using representative workloads, including combined catalog filtering and sorting.
+Catalog requests use a cache-aside flow: the catalog FastAPI process checks Redis; a cache hit returns the cached catalog response, while a cache miss reads from `MandaiDB` and may populate the shared cache before returning the response. Redis is a performance cache; `MandaiDB` remains authoritative for catalog and inventory values. Purchase and stock updates remain transactional in the main backend, and catalog cache responses are not authoritative for checkout. For production readiness, adjust and retest cache expiry, invalidation following administrator updates, and Redis availability and recovery under the intended deployment conditions.
 
 ### Production readiness
 
-The deployment approach uses **Docker, Nginx reverse proxy/load balancing, and multiple FastAPI instances/workers**. Nginx with four local FastAPI instances and Redis shared caching has been exercised for read-only API load testing; the production topology remains subject to environment-specific configuration and validation. Production readiness requires further integration, performance, security, failover and load testing using the **actual production dataset and expected user workload, hardware resources, network conditions, SQL Server capacity, and deployment configuration**. Validation should cover Nginx routing, container lifecycle, connection pools, shared media, HTTPS, secrets management and Stripe webhook delivery.
+The Product Catalog Microservices architecture, including NGINX load balancing, Redis shared caching, service routing, and CORS configuration, has been implemented and validated in the local development environment.
 
-**Evidence status:** Development included a four-worker Uvicorn configuration. A separate local, non-production benchmark used Nginx to distribute read-only catalog requests across four FastAPI instances with Redis shared caching. Production containerization, resilience and sizing require validation using the actual production dataset, hardware, traffic and configuration. See [Product Catalog API Load Test Report](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md).
+For **production readiness**, environment-specific configuration adjustments and additional testing are required, including HTTPS, secrets management, CORS allowlists, cache consistency following administrator updates, Redis availability, service health and failover, SQL Server connection pools, shared media access, Stripe webhook handling, container lifecycle management, and performance testing under the intended production infrastructure and workloads.
 
-## 10. Direct API Stress Test — Observed Read-Only Throughput
-
-The read-only product catalog endpoint (`GET /api/products`) was tested against the local FastAPI server at concurrency levels of **5, 10, 20, 50 and 100 simulated users**, with **200 requests per stage**. The results showed **200/200 successful responses and zero errors at every stage**. At the highest tested concurrency (**100 simulated users**), the observed throughput was approximately **330 requests per second (RPS)**.
-
-These figures describe **concurrent request-generation load and measured HTTP throughput** in the tested development configuration. They are separate from SQL-only sorting measurements and Flutter lazy-loading/rendering measurements. They also represent a read-only endpoint, rather than checkout or payment throughput. Production capacity should be established through load testing with the actual dataset, hardware, deployment configuration, request mix, and target response-time requirements.
-
-### Multi-instance Nginx and Redis scale-out evidence
-
-A separate local, non-production read-only Product Catalog benchmark used **NGINX**, **four FastAPI instances** and **Redis shared caching**. At **200 concurrent virtual users**, the test recorded **PASS: 1,000/1,000 successful HTTP requests**, **zero request failures**, approximately **1,056.17 RPS**, and **486.66 ms P95 latency**. This benchmark does not establish checkout/payment throughput or production capacity.
-
-A separate stress-test scenario exercised **up to 2,000 HTTP requests** with a k6 target of **300 RPS**. This is a request-volume scenario, not a claim of 2,000 concurrent users; its final success and latency figures are not asserted here.
-
-## 11. Stripe Payment Gateway (Sandbox)
-
-Stripe Test Mode integrates with Stripe's real payment APIs to demonstrate checkout, payment status handling, and test-card transactions without charging real funds. Production operation requires live credentials, secure webhook validation, and testing against the target production environment and configuration.
-
-## 12. Engineering Evidence and Validation Scope
-
-Engineering evidence includes:
-
-| Area | Evidence available | Scope |
-| --- | --- | --- |
-| Catalog API | Reviewed FastAPI endpoint signature and SQLAlchemy ordering/pagination logic | Server-side filter/sort/pagination behavior |
-| SQL Server indexes | SSMS index inventory and active-category index creation | Five named indexes on `dbo.Products` |
-| Combined SQL performance | 8 scenarios × 5 runs, 40 executions | Synthetic read-only SQL benchmark; 1–18 ms, weighted average 2.83 ms |
-| Local API pagination (after index addition) | 50 sequential requests after five warm-ups | 50 PASS; average 5.13 ms; P95 7.51 ms; no matched before-index HTTP baseline |
-| Read-only HTTP stress | Five concurrency stages, 200 requests each, zero errors | Up to 100 simulated concurrent users, approximately 330 RPS at the highest stage |
-| Purchase concurrency | Concurrency test, 20 requests against stock of 10 | 10 accepted and 10 rejected; no overselling in that scenario |
-| Flutter | Static analysis and unit/widget test results measured during development | 8 tests passed in the measured run; end-to-end UI latency measured separately if required |
-| Nginx, Redis and multiple API instances | Local read-only benchmark: four FastAPI instances, 200 concurrent users, 1,000/1,000 HTTP requests successful, P95 486.66 ms | Catalog scale-out evidence; production deployment requires environment-specific validation |
-
-Production readiness requires testing under the actual product data volume, traffic patterns, hardware and deployment configuration, including multi-device UI, checkout, webhook retries, security, performance, resilience and monitoring. Configure production HTTPS, secrets management and webhook verification according to the deployment design.
-
-## 13. Technical Decisions and Trade-offs
+## 10. Technical Decisions and Trade-offs
 
 - **Flutter:** Reuses UI code across platforms, while native features and device layouts may need platform-specific work.
-- **FastAPI:** Typed REST endpoints, configurable Uvicorn worker processes, and container-based deployment with Docker and Nginx as the proposed reverse proxy/load balancer.
+- **FastAPI:** Typed REST endpoints, configurable Uvicorn worker processes, and NGINX routing with Docker-hosted NGINX in the tested local setup.
 - **SQL Server:** Strong transactional integrity for purchase and stock consistency; correct indexing and connection-pool configuration matter under load.
-- **Modular application:** Keeps the focused assessment deployable as a single backend service, with independent worker/instance scaling as a future deployment option.
+- **Service separation:** Retains the existing main FastAPI transactional/admin backend while extracting the read-only customer Product Catalog into a separately runnable service; both currently share `MandaiDB`.
 - **Soft deactivation:** Supports retention of products referenced by historical transactions where the corresponding backend and database rules are implemented.
 
-## 14. Product Catalog Scale-Out Benchmark and Future Microservices Evolution
-
-### Submitted architecture
-
-The coding assessment submission remains a **modular monolithic application**, using a shared Flutter frontend, a FastAPI backend and SQL Server (`MandaiDB`). The codebase applies **Clean Architecture principles**, separation of concerns and modular/repository design practices aligned with SOLID principles. These principles support maintainability and potential future service extraction; they do not by themselves establish that the application is already a microservices system.
-
-### Experimental horizontal scale-out benchmark
-
-A separate, local **read-only Product Catalog API benchmark** evaluated horizontal scaling of the existing backend deployment, using:
-
-- **NGINX** for load balancing across **four FastAPI instances**.
-- **Redis** as a shared cache for catalog responses across instances.
-- **SQL Server (`MandaiDB`)** as the authoritative data store.
-
-**Verified benchmark result: PASS — 200 concurrent virtual users, 1,000/1,000 HTTP requests successful, zero request failures, approximately 1,056.17 requests/second and P95 response latency of 486.66 ms.** This result applies to the tested read-only catalog workload and local configuration, not to checkout/payment throughput or production capacity.
-
-A separate read-only stress-test scenario has also been documented with **up to 2,000 HTTP requests** and k6 configured for a target of **300 RPS**. These values describe request volume and target pacing, not 2,000 concurrent users; final success and latency metrics for that scenario are not asserted here.
-
-### Future scalability
-
-The benchmark demonstrates that **multiple instances of the current application can share Redis caching behind a load balancer**. In a future architecture, the Product Catalog domain could be extracted into an **independently deployable microservice**, allowing service-specific horizontal scaling while retaining shared caching where appropriate. This would require explicit service boundaries, independent deployment, data ownership and integration design, plus additional validation. **No microservice extraction is claimed for the submitted assessment.**
+**Author:** Yongky

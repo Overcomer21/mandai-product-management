@@ -6,12 +6,14 @@ A full-stack merchandise management and customer storefront demo developed for M
 
 ## Overview
 
-The application provides a customer storefront, administrator inventory management, secure purchasing, and an optional Stripe sandbox checkout experience. It uses a shared Flutter codebase and a Python backend with Microsoft SQL Server as the source of truth for orders and inventory.
+The application provides a customer storefront, administrator inventory management, secure purchasing, and an optional Stripe sandbox checkout experience. It uses a shared Flutter frontend, a main FastAPI backend for transactional and administrative operations, and a separately runnable read-only Product Catalog FastAPI service. NGINX routes requests to the appropriate service, Redis provides shared catalog caching, and Microsoft SQL Server (`MandaiDB`) remains the single authoritative database.
 
 ### Technology stack
 
 - **Frontend:** Flutter / Dart — Web, Windows, Android, iOS, macOS and Linux targets (each requires platform-specific configuration and validation).
-- **Backend:** Python / FastAPI with REST/JSON APIs.
+- **Backend:** Python / FastAPI REST/JSON APIs — main application and independently scalable read-only Product Catalog service.
+- **Routing and load balancing:** NGINX (Docker), `least_conn` across four catalog instances.
+- **Shared catalog cache:** Redis (cache, not the authoritative database).
 - **Database:** Microsoft SQL Server (`MandaiDB`).
 - **Authentication:** JWT access tokens and server-side Role-Based Access Control (RBAC).
 - **Payment demo:** Stripe Checkout in Test Mode (sandbox).
@@ -31,7 +33,7 @@ The application provides a customer storefront, administrator inventory manageme
 - Python and pip compatible with `backend/requirements.txt`.
 - Microsoft SQL Server and Microsoft ODBC Driver 18 for SQL Server.
 - SQL Server Management Studio (SSMS) or another SQL client.
-- Git. Android development requires the Android toolchain; iOS/macOS builds require macOS and Xcode.
+- Git. Docker Desktop and Redis are required for the documented NGINX/Redis catalog scale-out configuration; the main API can be run independently for development. Android development requires the Android toolchain; iOS/macOS builds require macOS and Xcode.
 
 ## Local development
 
@@ -43,13 +45,13 @@ Use an existing SQL Server instance and the project's database setup/migration s
 
 **Important:** Do not rerun database creation, product seeding, or destructive cleanup against an existing `MandaiDB` containing data you need to preserve. Prefer an isolated test database for data-changing tests. The dedicated Q5 concurrency script is explicitly gated for `MandaiDB`; run it only with authorization and safeguards for disposable test records, and never modify existing master product data.
 
-### 2. Start FastAPI (PowerShell)
+### 2. Start main FastAPI (PowerShell)
 
 ```powershell
-cd backend
-py -3 -m venv .venv
+cd C:\UIPath\mandai-product-management\backend
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+# Install dependencies only when needed:
+# python -m pip install -r requirements.txt
 ```
 
 Create `backend/.env` from the provided example if present; configure the actual SQL Server connection, JWT secret, and any required demo-user credentials. Never commit `.env` or API keys.
@@ -60,70 +62,73 @@ python -m uvicorn app.main:app --reload --port 8000
 
 API documentation: http://localhost:8000/docs
 
-### 3. Start Flutter (PowerShell)
+### 3. Product Catalog microservices, Redis and NGINX (local scale-out)
+
+The current scale-out configuration uses the dedicated FastAPI application entry point `app.product_catalog_main:app`, with four independently runnable instances on ports **8100–8103**. NGINX in Docker (`mandai-catalog-nginx-lb`) listens on container port **8080**, published on the tested Windows host at **52000**. Its canonical configuration is [`backend/catalog-nginx.conf`](backend/catalog-nginx.conf).
+
+- Catalog reads (`/api/products` and applicable read-only catalog routes) are routed to the four catalog instances through the NGINX `catalog_backend` upstream using `least_conn`.
+- Authentication, administrator product CRUD, purchases, checkout, orders, Stripe-related routes and `/media/` remain routed to the main FastAPI backend on **8000**. The NGINX `/media/` proxy forwards images to port 8000 and suppresses duplicate upstream CORS headers.
+- Redis is shared by the catalog instances for catalog-response caching. **`MandaiDB` remains the source of truth**; Redis is not a second database for orders or inventory.
+- The four catalog instances are separate FastAPI processes; this does **not** imply that each instance runs in its own Docker container. The observed local Docker deployment is for NGINX.
+
+For the existing environment, first confirm Redis availability, active catalog processes and the running NGINX container before starting additional instances. The following commands are **read-only inspection**:
+
+```powershell
+cd C:\UIPath\mandai-product-management\backend
+.\.venv\Scripts\Activate.ps1
+Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
+    Where-Object { $_.LocalPort -in @(8000,8100,8101,8102,8103,52000) } |
+    Select-Object LocalAddress,LocalPort,OwningProcess
+docker ps --filter "name=mandai-catalog-nginx-lb"
+```
+
+The local browser API base is `http://127.0.0.1:52000` when the catalog NGINX deployment is active. Use the Redis settings and startup procedures configured for the local environment. When recreating the NGINX container, mount or copy `backend/catalog-nginx.conf` to preserve the deployed configuration.
+
+### 4. Start Flutter (PowerShell)
 
 Open a second terminal from the repository root:
 
 ```powershell
 cd frontend
 flutter pub get
-flutter run -d chrome --web-port 8080 --dart-define=API_BASE=http://localhost:8000
+flutter run -d chrome --web-port 8085 --dart-define=API_BASE=http://127.0.0.1:52000
 ```
 
 Run `flutter devices` to see which platforms are configured locally. **Do not run `flutter create .` over an existing configured project unless platform scaffolding is actually missing and existing files have been backed up.**
 
-For an Android emulator, the backend running on the development computer is typically reachable through `http://10.0.2.2:8000` instead of `localhost`. Physical mobile devices need a network-reachable API URL. Use HTTPS for deployed environments.
+For an Android emulator using the local NGINX entry point, use `http://10.0.2.2:52000` if the emulator can reach that host port. Direct access to the main FastAPI backend uses `http://10.0.2.2:8000`. Physical mobile devices need a network-reachable API URL. Use HTTPS for deployed environments.
 
-### 4. Stripe Test Mode
+### 5. Stripe Test Mode
 
-Configure the required Stripe **test** credentials and return/webhook settings using the project's environment configuration. Use Stripe test payment methods; no live funds are transferred. Payment-session and webhook behavior must be validated before claiming production payment readiness. Never commit Stripe secrets.
+Configure the required Stripe **test** credentials and return/webhook settings using the project's environment configuration. Use Stripe test payment methods; no live funds are transferred. Production payment configuration and testing are covered under **Production readiness** below. Never commit Stripe secrets.
 
-## Testing
+## Product Catalog Microservice — Verification Scope
 
-Typical checks, when the corresponding dependencies and test environment are configured:
+This section covers the read-only Product Catalog microservice: NGINX (host port **52000**) distributes catalog requests across FastAPI instances (**8100–8103**). Each instance checks the shared Redis cache and accesses SQL Server (`MandaiDB`) on a cache miss. The main backend on port **8000** remains responsible for administrative writes, transactions and media.
 
-```powershell
-# Backend
-cd backend
-python -m pytest -q
-
-# Frontend (in a separate command from frontend/)
-cd ..\frontend
-flutter analyze
-flutter test
-```
-
-Additional SQL Server integration tests, concurrency checks, and read-only API stress tests are documented in the [Application Acceptance Test Results](APPLICATION_ACCEPTANCE_TEST_RESULTS.md). The dedicated SQL Server concurrency tests use disposable test records; do not alter retained master product data. Prefer an isolated database for general integration testing. The explicitly gated Q5 test below was run against `MandaiDB` and reported successful cleanup. Its cleanup status does not replace independent review of database changes.
-
-### Comprehensive Concurrent Overselling Prevention Test
-
-**PASS — No overselling observed in 1,000 concurrent purchase attempts.** The SQL Server test executed **100 concurrent buyers across 10 iterations**, with 30 units of test stock per iteration. Results: **300 successful purchases**, **700 expected out-of-stock rejections**, **zero reported errors**, and consistent inventory, order, and demo-payment records. All **10/10 iterations passed**, and the test reported successful cleanup. These results demonstrate overselling prevention under the tested concurrency conditions, not a guarantee for every production scenario.
-
-**Detailed results and evidence:** [Application Acceptance Test Results](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) · [`q5-100-buyers-concurrency.json`](test-results/q5-100-buyers-concurrency.json).
-
-Testing does not imply validation of every target device or production payment certification.
+The final Product Catalog microservice validation covers catalog GET responses and pagination, Redis shared caching, NGINX routing, and browser image/CORS handling in the local development environment. For production readiness, configuration adjustments and additional testing are required on the intended infrastructure and workloads.
 
 ## Main API routes
 
 | Route | Purpose |
 | --- | --- |
 | `POST /api/auth/login` | Obtain an authentication token |
-| `GET /api/products` | Retrieve products |
-| `GET /api/products/{id}` | Retrieve one product |
+| `GET /api/products` | Read-only customer catalog through NGINX and Product Catalog service |
+| `GET /api/products/{id}` | Retrieve one product through the registered catalog API route |
 | `GET/POST/PUT/DELETE /api/admin/products` | Administrator product management; DELETE is a soft deactivation where implemented |
 | `POST /api/purchases` | Authenticated purchase, with an `Idempotency-Key` header |
 | `GET /api/orders/my` | Customer order history |
 
-The project also includes optional Stripe Checkout, payment status, and return endpoints. Refer to the registered FastAPI routes and `/docs` for the exact paths and request schemas in the checked-out version.
+The main FastAPI backend continues to own administrator writes, purchase/checkout transactions and Stripe processing; the Product Catalog service is read-only. The project also includes optional Stripe Checkout, payment status, and return endpoints. Refer to the registered FastAPI routes and `/docs` for the exact paths and request schemas in the checked-out version.
 
 ## Security and design considerations
 
 - JWT authentication and server-side role checks protect restricted API operations.
-- CORS restricts allowed browser origins; it does not replace authentication or authorization.
+- NGINX CORS configuration permits the documented local Flutter Web origins and avoids duplicate CORS headers for proxied product images. CORS does not replace authentication or authorization.
 - Purchase prices and available stock are checked on the server, not trusted from the client.
 - SQL Server transactions and conditional inventory updates protect against race conditions and overselling.
 - Relational constraints and soft deactivation support data integrity and historical transaction references.
-- Use HTTPS, secret management, secure token storage, and validated Stripe webhooks before production deployment.
+- Production environment configuration and validation are described under **Production readiness** below.
 - Flutter layouts aim to adapt to desktop and mobile screens; all platform-specific behavior still needs separate verification.
 
 ## Video Demo
@@ -134,20 +139,15 @@ The project also includes optional Stripe Checkout, payment status, and return e
 
 ## Documentation
 
-- [`SPEC.md`](SPEC.md) — Scope, features, and assessment acceptance criteria.
-- [`ARCHITECTURE.md`](ARCHITECTURE.md) — Architecture principles, database integrity, transactions, concurrency, security, payments, and technical trade-offs.
-- [`APPLICATION_ACCEPTANCE_TEST_RESULTS.md`](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) — AC01–AC08 acceptance criteria verification, automated test evidence, comprehensive 100-buyer concurrency testing, overselling prevention, 2,022-product catalog verification, combined SQL benchmark, API load testing, and overall test results.
-- [`LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md`](LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md) — Catalog filtering, sorting, pagination, SQL Server indexing, and 40-execution combined SQL performance benchmark.
-- [`MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md`](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md) — Final read-only product catalog API stress testing through 2,000 requests: Python concurrent-request testing and k6 testing paced at 300 RPS using four FastAPI instances behind NGINX. A separate five-instance k6 ramp-up test through 700 VUs is documented in the architecture report.
+- [`SPEC.md`](SPEC.md) — Original functional scope and acceptance criteria; unchanged.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — Current Product Catalog microservice architecture, NGINX routing, Redis cache, shared SQL Server and technical trade-offs.
 
-**Assessment scope:** This is a demonstration project; it is not an official product or a claim of production readiness.
+**Assessment scope:** Independent demonstration project for Mandai Wildlife Group coding assessment.
+
+## Production readiness
+
+The Product Catalog Microservices architecture, including NGINX load balancing, Redis shared caching, service routing, and CORS configuration, has been implemented and validated in the local development environment.
+
+For **production readiness**, environment-specific configuration adjustments and additional testing are required, including HTTPS, secrets management, CORS allowlists, cache consistency following administrator updates, Redis availability, service health and failover, SQL Server connection pools, shared media access, Stripe webhook handling, container lifecycle management, and performance testing under the intended production infrastructure and workloads.
 
 Author: Yongky
-
-## Architecture and Future Scale-Out Potential — Product Catalog Benchmark
-
-The application submitted for this assessment uses a **modular monolithic architecture**, with design practices informed by **Clean Architecture and SOLID principles**. It is **not submitted as a microservices application**.
-
-As a separate, local proof-of-concept benchmark, the read-only Product Catalog API was exercised using **four FastAPI instances behind NGINX**, with **Redis shared caching**. The recorded **200-concurrent-virtual-user** k6 test **PASSED**, completing **1,000/1,000 HTTP requests successfully**, with **zero request failures** and **P95 latency of 486.66 ms**. These measurements apply to the tested catalog-read workload and local environment, not to checkout performance or production capacity.
-
-The modular design provides a potential path for **future horizontal scale-out**. The Product Catalog functionality could be extracted into an independently deployable microservice, with NGINX (or equivalent) distributing traffic across service instances and Redis supplying shared caching. Such a transition would require explicit service boundaries, deployment changes, and further validation; it is **not part of the submitted monolithic implementation**.
