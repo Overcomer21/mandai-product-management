@@ -44,6 +44,13 @@ Mandai Merchandise is a full-stack application featuring a customer storefront, 
 
 The application integrates with Stripe's actual payment platform using **Stripe Test Mode**, including test API credentials and hosted Stripe Checkout. It demonstrates payment-session creation, test card transactions, and payment-result handling **without real charges or fund transfers**. Sandbox functionality does not imply production payment certification or live payment readiness.
 
+## 5.1. Inventory and Payment Scope Assumptions
+
+- **In scope:** Deduct inventory atomically for purchases and prevent overselling, including concurrent requests, through database-level concurrency controls and transactional safeguards.
+- **Assessment assumption:** Payment is treated as successful, and no payment cancellation occurs in the evaluated scenario. This assumption limits the assessment scenario; it does not describe how all real-world payments behave.
+- **Outside this assessment scope:** End-to-end handling of payment failure, cancellation, refund, and associated inventory compensation/restoration. Stripe Test Mode demonstration does not establish complete coverage of these scenarios.
+- **Potential future enhancement:** Use Apache Kafka with an event-driven payment and inventory workflow to process cancellation/failure events and trigger safe stock release or restoration, with idempotent consumers, retries, reconciliation, and concurrency testing. This is a proposed enhancement, **not a completed capability**.
+
 ## 6. Acceptance Criteria — Mandai Q5
 
 1. Full-stack product management solution with a backend API.

@@ -27,6 +27,14 @@ The application provides a customer storefront, administrator inventory manageme
 
 **Transaction integrity:** Server-side validation, idempotency keys, database transactions, atomic conditional stock updates, commit/rollback behavior, and concurrency checks prevent overselling and inconsistent purchase records.
 
+## Inventory and Payment — Assessment Scope Notes
+
+The primary transaction-integrity scope of this assessment is **atomic stock deduction and prevention of overselling**, including concurrent purchase attempts. SQL Server remains the authoritative source of inventory, and stock updates must be protected by database transactions and concurrency-safe checks.
+
+For the **defined assessment scenario**, payment is **assumed to succeed**, and payment cancellation or failure requiring stock restoration is **outside the evaluated scope**. This is a test assumption, not a guarantee that real-world payments always succeed. The application includes a Stripe Test Mode demonstration, but this scope note does not claim full payment-failure, cancellation, refund, or stock-compensation coverage.
+
+**Future enhancement:** Apache Kafka and an event-driven payment/inventory workflow could support payment cancellation or failure handling and the corresponding inventory release/restoration. Such a workflow would require idempotent event processing, transactional consistency, retry/reconciliation safeguards, and dedicated tests before being considered implemented or production-ready.
+
 ## Prerequisites
 
 - Flutter SDK / Dart and a supported target platform toolchain (Chrome for Web; Visual Studio C++ workload for Windows desktop).
