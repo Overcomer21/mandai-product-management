@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {pythonJson,fingerprint} from '../src/domain/fingerprint.js';
+import {CatalogService} from '../src/application/catalog-service.js';
+import {OrderService} from '../src/application/order-service.js';
+import {productInput,validatePage} from '../src/shared/errors.js';
+import {amount,cents} from '../src/domain/money.js';
+test('python-compatible sorted JSON canonicalization',()=>{assert.equal(pythonJson({quantity:2,product_id:4}),'{"product_id": 4, "quantity": 2}');assert.equal(fingerprint({quantity:2,product_id:4}),'16541d1e61297a493cacd2f3572ddc3633294af30e7a49f84ef24d276ba33c5a');});
+test('pagination bounds and sorting',()=>{assert.deepEqual(validatePage({}),{limit:20,offset:0,sort:'Default',category:null,search:null,inStock:false});assert.throws(()=>validatePage({limit:101}),/Invalid limit/);assert.throws(()=>validatePage({sort:'Other'}),/Invalid sort/);});
+test('catalog delegates to repository and rejects missing detail',async()=>{const r={page:async f=>[f],detail:async()=>null,count:async()=>6};const s=new CatalogService(r);assert.equal((await s.page({limit:20}))[0].limit,20);assert.deepEqual(await s.count({}),{total:6});await assert.rejects(s.detail(42),{status:404});});
+test('purchase replay avoids duplicate writes',async()=>{let calls=0;const r={existing:async()=>({id:7,fingerprint:fingerprint({product_id:3,quantity:2}),status:'completed',total:5}),item:async()=>({product_id:3,quantity:2}),purchase:async()=>{calls++;}};const s=new OrderService(r);const data=await s.buy({id:1,role:'user'},'test-key1',{product_id:3,quantity:2});assert.equal(data.replayed,true);assert.equal(calls,0);});
+test('demo checkout validation rejects duplicate products before SQL',async()=>{const s=new OrderService({});await assert.rejects(s.checkout({role:'user'},'test-key1',{items:[{product_id:1,quantity:1},{product_id:1,quantity:1}],delivery_address:'1234567890',payment_method:'card_demo'}),{status:422});});
+test('integer money precision',()=>{assert.equal(cents('1.23'),123);assert.equal(amount(490),'4.90')});
+test('product validation prevents invalid stock',()=>{assert.throws(()=>productInput({name:'x',price:3,stock:-1}),{status:422});});

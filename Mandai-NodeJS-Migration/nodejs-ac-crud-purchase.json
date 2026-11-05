@@ -1,0 +1,306 @@
+{
+  "scope": "Node.js backend only; live local HTTP + SQL through API",
+  "base_url": "http://127.0.0.1:51872",
+  "timestamp_utc": "2026-11-05T14:15:22.760107+00:00",
+  "disposable_writes_enabled": true,
+  "run_id": "2b900bf9915f",
+  "test_product_prefix": "AC-",
+  "source": "Node.js Gateway only",
+  "counts": {
+    "PASS": 44,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "checks": [
+    {
+      "criterion": "AC01/02/04",
+      "name": "Gateway health",
+      "status": "PASS",
+      "detail": "JSON object keys: ['status']"
+    },
+    {
+      "criterion": "AC01/02/04",
+      "name": "Public catalog list, pagination",
+      "status": "PASS",
+      "detail": "5"
+    },
+    {
+      "criterion": "AC02/04",
+      "name": "Public categories",
+      "status": "PASS",
+      "detail": "JSON list (9 records)"
+    },
+    {
+      "criterion": "AC02/04",
+      "name": "Public catalog count",
+      "status": "PASS",
+      "detail": "JSON object keys: ['total']"
+    },
+    {
+      "criterion": "AC02/04",
+      "name": "Invalid pagination rejected",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC02/04",
+      "name": "Invalid sort rejected",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC02/04",
+      "name": "Catalog filter/sort endpoint",
+      "status": "PASS",
+      "detail": "JSON list (5 records)"
+    },
+    {
+      "criterion": "AC02/04",
+      "name": "Public product detail",
+      "status": "PASS",
+      "detail": "Product detail request matches catalog product (ID 1)"
+    },
+    {
+      "criterion": "AC02/04",
+      "name": "Pagination nonoverlapping page boundaries",
+      "status": "PASS",
+      "detail": "Distinct records across first two pages: 5+5"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Unauthenticated GET /api/admin/products denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Unauthenticated GET /api/admin/products/count denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Unauthenticated GET /api/admin/products/stats denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Unauthenticated POST /api/admin/products denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Unauthenticated PUT /api/admin/products/99999999 denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Unauthenticated DELETE /api/admin/products/99999999 denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC06",
+      "name": "Unauthenticated POST /api/purchases denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC06",
+      "name": "Unauthenticated POST /api/checkout denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC06",
+      "name": "Unauthenticated GET /api/orders/my denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC01/03/05",
+      "name": "Admin login",
+      "status": "PASS",
+      "detail": "Authenticated admin token received (not printed)"
+    },
+    {
+      "criterion": "AC01/04/06",
+      "name": "Customer login",
+      "status": "PASS",
+      "detail": "Authenticated customer token received (not printed)"
+    },
+    {
+      "criterion": "AC01/03/05",
+      "name": "Admin identity endpoint",
+      "status": "PASS",
+      "detail": "JSON object keys: ['delivery_address', 'email', 'payment_method', 'phone_number']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Admin inventory categories",
+      "status": "PASS",
+      "detail": "JSON list (10 records)"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Admin inventory count",
+      "status": "PASS",
+      "detail": "JSON object keys: ['total']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Admin inventory list",
+      "status": "PASS",
+      "detail": "JSON list (5 records)"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Admin inventory stats",
+      "status": "PASS",
+      "detail": "JSON object keys: ['active', 'stock', 'total']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Admin invalid product create rejected",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC06",
+      "name": "Admin purchase denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC01/04/06",
+      "name": "Customer identity endpoint",
+      "status": "PASS",
+      "detail": "JSON object keys: ['delivery_address', 'email', 'payment_method', 'phone_number']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Customer GET /api/admin/products denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Customer GET /api/admin/products/count denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Customer GET /api/admin/products/stats denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Customer POST /api/admin/products denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Customer PUT /api/admin/products/99999999 denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Customer DELETE /api/admin/products/99999999 denied",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC06",
+      "name": "Customer orders endpoint",
+      "status": "PASS",
+      "detail": "JSON list (105 records)"
+    },
+    {
+      "criterion": "AC06",
+      "name": "Customer order detail endpoint",
+      "status": "PASS",
+      "detail": "JSON list (105 records)"
+    },
+    {
+      "criterion": "AC06",
+      "name": "Invalid purchase quantity rejected",
+      "status": "PASS",
+      "detail": "JSON object keys: ['detail']"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Real admin CRUD lifecycle with authenticated admin",
+      "status": "PASS",
+      "detail": "Disposable product 2120: create/read/update/deactivate via admin token"
+    },
+    {
+      "criterion": "AC06/07",
+      "name": "Real customer buy, idempotency replay, fingerprint conflict",
+      "status": "PASS",
+      "detail": "One unique order, one stock decrement on product 2121"
+    },
+    {
+      "criterion": "AC07/08",
+      "name": "Real concurrent buyers / no oversell",
+      "status": "SKIP",
+      "detail": "Skipped by --skip-concurrency"
+    },
+    {
+      "criterion": "AC06",
+      "name": "Real server-side pricing ignores untrusted client price",
+      "status": "PASS",
+      "detail": "Server used authoritative product price for disposable product 2122"
+    },
+    {
+      "criterion": "AC06/07/08",
+      "name": "Insufficient-stock transaction rejected without stock mutation",
+      "status": "PASS",
+      "detail": "Rejected insufficient stock with unchanged stock: 2123"
+    },
+    {
+      "criterion": "AC04/06/07",
+      "name": "Real cart checkout, payment record and idempotent replay",
+      "status": "PASS",
+      "detail": "Demo cart checkout, order history, pricing, replay, stock verified for product 2124"
+    },
+    {
+      "criterion": "AC06/07/08",
+      "name": "Real failed cart checkout stock rollback",
+      "status": "PASS",
+      "detail": "Checkout rejected and product 2125 retained stock"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Real-product RBAC denial with no mutation",
+      "status": "PASS",
+      "detail": "Customer GET/PUT/DELETE forbidden on existing disposable product 2126"
+    },
+    {
+      "criterion": "AC01/04",
+      "name": "Flutter UI/widget/mobile end-to-end acceptance",
+      "status": "SKIP",
+      "detail": "Python HTTP runner cannot validate Flutter rendering, cart state or Android payment return"
+    },
+    {
+      "criterion": "AC06/07",
+      "name": "Stripe end-to-end sandbox webhook, cancel, reconciliation",
+      "status": "SKIP",
+      "detail": "Excluded from this test to prevent actual Stripe session creation or duplicate payment"
+    },
+    {
+      "criterion": "AC07/08",
+      "name": "Production failure-recovery and sustained load",
+      "status": "SKIP",
+      "detail": "Requires separate resilience and sustained-load evidence"
+    }
+  ],
+  "overall": "INCOMPLETE"
+}

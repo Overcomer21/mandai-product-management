@@ -1,0 +1,109 @@
+
+# Mandai Node.js Microservices
+# Existing external SQL Server
+# Node.js: 8011
+# NGINX Host: 51872
+# NGINX Container: 8080
+
+x-app: &app
+  build:
+    context: ..
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  env_file:
+    - ../.env
+  networks:
+    - mandai
+
+services:
+
+  gateway:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:51872:8080"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../media:/srv/mandai/media:ro
+    depends_on:
+      - catalog1
+      - catalog2
+      - commerce1
+      - commerce2
+      - identity
+      - admin
+    networks:
+      - mandai
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - mandai
+
+  catalog1:
+    <<: *app
+    depends_on:
+      - redis
+    environment:
+      SERVICE_MODE: catalog
+      PORT: "8011"
+      REDIS_URL: redis://redis:6379
+      CATALOG_CACHE_TTL_SECONDS: "5"
+
+  catalog2:
+    <<: *app
+    depends_on:
+      - redis
+    environment:
+      SERVICE_MODE: catalog
+      PORT: "8011"
+      REDIS_URL: redis://redis:6379
+      CATALOG_CACHE_TTL_SECONDS: "5"
+
+  catalog3:
+    <<: *app
+    depends_on:
+      - redis
+    environment:
+      SERVICE_MODE: catalog
+      PORT: "8011"
+      REDIS_URL: redis://redis:6379
+      CATALOG_CACHE_TTL_SECONDS: "5"
+
+  catalog4:
+    <<: *app
+    depends_on:
+      - redis
+    environment:
+      SERVICE_MODE: catalog
+      PORT: "8011"
+      REDIS_URL: redis://redis:6379
+      CATALOG_CACHE_TTL_SECONDS: "5"
+
+  commerce1:
+    <<: *app
+    environment:
+      SERVICE_MODE: commerce
+      PORT: "8011"
+
+  commerce2:
+    <<: *app
+    environment:
+      SERVICE_MODE: commerce
+      PORT: "8011"
+
+  identity:
+    <<: *app
+    environment:
+      SERVICE_MODE: identity
+      PORT: "8011"
+
+  admin:
+    <<: *app
+    environment:
+      SERVICE_MODE: admin
+      PORT: "8011"
+
+networks:
+  mandai:
+    driver: bridge

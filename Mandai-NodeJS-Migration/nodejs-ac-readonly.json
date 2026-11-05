@@ -1,0 +1,159 @@
+{
+  "scope": "Node.js backend only; live local HTTP + SQL through API",
+  "base_url": "http://127.0.0.1:51872",
+  "timestamp_utc": "2026-11-05T14:06:04.247056+00:00",
+  "disposable_writes_enabled": false,
+  "counts": {
+    "PASS": 16,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 8
+  },
+  "checks": [
+    {
+      "criterion": "AC01/02/04",
+      "name": "Gateway health",
+      "status": "PASS",
+      "detail": "{'status': 'ok'}"
+    },
+    {
+      "criterion": "AC01/02/04",
+      "name": "Public catalog list, pagination",
+      "status": "PASS",
+      "detail": "5"
+    },
+    {
+      "criterion": "AC02/04",
+      "name": "Public categories",
+      "status": "PASS",
+      "detail": "['Apparel', 'Fashion', 'Food & Beverage', 'Home & Lifestyle', 'Merchandise', 'Snack', 'Sports & Outdoor', 'Tech & Gadgets', 'Toys']"
+    },
+    {
+      "criterion": "AC02/04",
+      "name": "Public catalog count",
+      "status": "PASS",
+      "detail": "{'total': 2023}"
+    },
+    {
+      "criterion": "AC02/04",
+      "name": "Invalid pagination rejected",
+      "status": "PASS",
+      "detail": "{'detail': 'Invalid limit'}"
+    },
+    {
+      "criterion": "AC02/04",
+      "name": "Invalid sort rejected",
+      "status": "PASS",
+      "detail": "{'detail': 'Invalid sort'}"
+    },
+    {
+      "criterion": "AC02/04",
+      "name": "Catalog filter/sort endpoint",
+      "status": "PASS",
+      "detail": "[{'id': 45, 'name': 'Toasted Coconut Bites \u2014 90 g', 'description': 'Demo toasted coconut snack, 90 g pack.', 'category': 'Snack', 'price': 6.9, 'stock': 105, 'is_active': True, 'image_url': '/media/products/toasted_coconut_bites_90g.png', '"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Unauthenticated GET /api/admin/products denied",
+      "status": "PASS",
+      "detail": "{'detail': 'Authentication required'}"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Unauthenticated GET /api/admin/products/count denied",
+      "status": "PASS",
+      "detail": "{'detail': 'Authentication required'}"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Unauthenticated GET /api/admin/products/stats denied",
+      "status": "PASS",
+      "detail": "{'detail': 'Authentication required'}"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Unauthenticated POST /api/admin/products denied",
+      "status": "PASS",
+      "detail": "{'detail': 'Authentication required'}"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Unauthenticated PUT /api/admin/products/99999999 denied",
+      "status": "PASS",
+      "detail": "{'detail': 'Authentication required'}"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Unauthenticated DELETE /api/admin/products/99999999 denied",
+      "status": "PASS",
+      "detail": "{'detail': 'Authentication required'}"
+    },
+    {
+      "criterion": "AC06",
+      "name": "Unauthenticated POST /api/purchases denied",
+      "status": "PASS",
+      "detail": "{'detail': 'Authentication required'}"
+    },
+    {
+      "criterion": "AC06",
+      "name": "Unauthenticated POST /api/checkout denied",
+      "status": "PASS",
+      "detail": "{'detail': 'Authentication required'}"
+    },
+    {
+      "criterion": "AC06",
+      "name": "Unauthenticated GET /api/orders/my denied",
+      "status": "PASS",
+      "detail": "{'detail': 'Authentication required'}"
+    },
+    {
+      "criterion": "AC01/03/05",
+      "name": "Admin login",
+      "status": "SKIP",
+      "detail": "Set MANDAI_ADMIN_EMAIL and MANDAI_ADMIN_PASSWORD"
+    },
+    {
+      "criterion": "AC01/04/06",
+      "name": "Customer login",
+      "status": "SKIP",
+      "detail": "Set MANDAI_CUSTOMER_EMAIL and MANDAI_CUSTOMER_PASSWORD"
+    },
+    {
+      "criterion": "AC03/05",
+      "name": "Real admin CRUD lifecycle",
+      "status": "SKIP",
+      "detail": "Requires --allow-disposable-writes with explicit confirmation"
+    },
+    {
+      "criterion": "AC06/07",
+      "name": "Real purchase and idempotent replay",
+      "status": "SKIP",
+      "detail": "Requires disposable SQL writes"
+    },
+    {
+      "criterion": "AC07/08",
+      "name": "Concurrent overselling prevention",
+      "status": "SKIP",
+      "detail": "Requires disposable SQL writes"
+    },
+    {
+      "criterion": "AC01/04",
+      "name": "Flutter UI/widget/mobile end-to-end acceptance",
+      "status": "SKIP",
+      "detail": "Python HTTP runner cannot validate Flutter rendering, cart state or Android payment return"
+    },
+    {
+      "criterion": "AC06/07",
+      "name": "Stripe end-to-end sandbox webhook, cancel, reconciliation",
+      "status": "SKIP",
+      "detail": "Excluded from this test to prevent actual Stripe session creation or duplicate payment"
+    },
+    {
+      "criterion": "AC07/08",
+      "name": "Production failure-recovery and sustained load",
+      "status": "SKIP",
+      "detail": "Requires separate resilience and sustained-load evidence"
+    }
+  ],
+  "overall": "INCOMPLETE"
+}

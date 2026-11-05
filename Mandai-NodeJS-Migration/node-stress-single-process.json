@@ -1,0 +1,431 @@
+{
+  "test": "Node.js catalog finite-burst GET stress",
+  "source": "node_catalog_stress.mjs",
+  "timestamp": "2026-11-05T07:17:07.276Z",
+  "base": "http://127.0.0.1:51872",
+  "endpoint": "/api/products",
+  "read_only": true,
+  "levels": [
+    {
+      "level": 10,
+      "requests": 10,
+      "http200_valid_json": 10,
+      "errors": 0,
+      "statuses": {
+        "200": 10
+      },
+      "elapsed_ms": 141.29,
+      "rps": 70.78,
+      "p50_ms": 97.34,
+      "p95_ms": 120.58,
+      "p99_ms": 132.97,
+      "max_ms": 136.07,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 20,
+      "requests": 20,
+      "http200_valid_json": 20,
+      "errors": 0,
+      "statuses": {
+        "200": 20
+      },
+      "elapsed_ms": 27.91,
+      "rps": 716.52,
+      "p50_ms": 19.07,
+      "p95_ms": 20.86,
+      "p99_ms": 21.26,
+      "max_ms": 21.36,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 50,
+      "requests": 50,
+      "http200_valid_json": 50,
+      "errors": 0,
+      "statuses": {
+        "200": 50
+      },
+      "elapsed_ms": 55.85,
+      "rps": 895.32,
+      "p50_ms": 39.29,
+      "p95_ms": 42.13,
+      "p99_ms": 42.2,
+      "max_ms": 42.25,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 100,
+      "requests": 100,
+      "http200_valid_json": 100,
+      "errors": 0,
+      "statuses": {
+        "200": 100
+      },
+      "elapsed_ms": 94.34,
+      "rps": 1059.96,
+      "p50_ms": 51.68,
+      "p95_ms": 60.73,
+      "p99_ms": 61.22,
+      "max_ms": 61.51,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 200,
+      "requests": 200,
+      "http200_valid_json": 200,
+      "errors": 0,
+      "statuses": {
+        "200": 200
+      },
+      "elapsed_ms": 155.71,
+      "rps": 1284.47,
+      "p50_ms": 86.71,
+      "p95_ms": 103.1,
+      "p99_ms": 105.61,
+      "max_ms": 106.07,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 300,
+      "requests": 300,
+      "http200_valid_json": 300,
+      "errors": 0,
+      "statuses": {
+        "200": 300
+      },
+      "elapsed_ms": 194.61,
+      "rps": 1541.57,
+      "p50_ms": 95.41,
+      "p95_ms": 119.27,
+      "p99_ms": 121.01,
+      "max_ms": 124.64,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 400,
+      "requests": 400,
+      "http200_valid_json": 400,
+      "errors": 0,
+      "statuses": {
+        "200": 400
+      },
+      "elapsed_ms": 213.3,
+      "rps": 1875.26,
+      "p50_ms": 99.07,
+      "p95_ms": 129.45,
+      "p99_ms": 131.66,
+      "max_ms": 131.89,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 500,
+      "requests": 500,
+      "http200_valid_json": 500,
+      "errors": 0,
+      "statuses": {
+        "200": 500
+      },
+      "elapsed_ms": 255.78,
+      "rps": 1954.84,
+      "p50_ms": 125.17,
+      "p95_ms": 147.67,
+      "p99_ms": 149.61,
+      "max_ms": 150.39,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 600,
+      "requests": 600,
+      "http200_valid_json": 600,
+      "errors": 0,
+      "statuses": {
+        "200": 600
+      },
+      "elapsed_ms": 292.81,
+      "rps": 2049.08,
+      "p50_ms": 153.83,
+      "p95_ms": 165.85,
+      "p99_ms": 167.79,
+      "max_ms": 170.01,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 700,
+      "requests": 700,
+      "http200_valid_json": 700,
+      "errors": 0,
+      "statuses": {
+        "200": 700
+      },
+      "elapsed_ms": 320.6,
+      "rps": 2183.38,
+      "p50_ms": 160.7,
+      "p95_ms": 172.44,
+      "p99_ms": 173.58,
+      "max_ms": 174.35,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 800,
+      "requests": 800,
+      "http200_valid_json": 800,
+      "errors": 0,
+      "statuses": {
+        "200": 800
+      },
+      "elapsed_ms": 379.14,
+      "rps": 2110.02,
+      "p50_ms": 198.55,
+      "p95_ms": 215.24,
+      "p99_ms": 216.08,
+      "max_ms": 216.59,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 900,
+      "requests": 900,
+      "http200_valid_json": 900,
+      "errors": 0,
+      "statuses": {
+        "200": 900
+      },
+      "elapsed_ms": 389.95,
+      "rps": 2308.01,
+      "p50_ms": 197.15,
+      "p95_ms": 220.31,
+      "p99_ms": 222.39,
+      "max_ms": 224.68,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1000,
+      "requests": 1000,
+      "http200_valid_json": 1000,
+      "errors": 0,
+      "statuses": {
+        "200": 1000
+      },
+      "elapsed_ms": 420.3,
+      "rps": 2379.28,
+      "p50_ms": 216.64,
+      "p95_ms": 231.38,
+      "p99_ms": 233.29,
+      "max_ms": 235.45,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1100,
+      "requests": 1100,
+      "http200_valid_json": 1100,
+      "errors": 0,
+      "statuses": {
+        "200": 1100
+      },
+      "elapsed_ms": 544.52,
+      "rps": 2020.12,
+      "p50_ms": 284.36,
+      "p95_ms": 303.94,
+      "p99_ms": 307.74,
+      "max_ms": 312.05,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1200,
+      "requests": 1200,
+      "http200_valid_json": 1200,
+      "errors": 0,
+      "statuses": {
+        "200": 1200
+      },
+      "elapsed_ms": 497.83,
+      "rps": 2410.45,
+      "p50_ms": 257.44,
+      "p95_ms": 276.25,
+      "p99_ms": 279.69,
+      "max_ms": 280.34,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1300,
+      "requests": 1300,
+      "http200_valid_json": 1300,
+      "errors": 0,
+      "statuses": {
+        "200": 1300
+      },
+      "elapsed_ms": 513.09,
+      "rps": 2533.65,
+      "p50_ms": 263.75,
+      "p95_ms": 295.76,
+      "p99_ms": 299.23,
+      "max_ms": 300.26,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1400,
+      "requests": 1400,
+      "http200_valid_json": 1400,
+      "errors": 0,
+      "statuses": {
+        "200": 1400
+      },
+      "elapsed_ms": 530.64,
+      "rps": 2638.3,
+      "p50_ms": 279.26,
+      "p95_ms": 293.62,
+      "p99_ms": 298.06,
+      "max_ms": 298.9,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1500,
+      "requests": 1500,
+      "http200_valid_json": 1500,
+      "errors": 0,
+      "statuses": {
+        "200": 1500
+      },
+      "elapsed_ms": 564.48,
+      "rps": 2657.32,
+      "p50_ms": 294.06,
+      "p95_ms": 327.8,
+      "p99_ms": 330.08,
+      "max_ms": 335.52,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1600,
+      "requests": 1600,
+      "http200_valid_json": 1600,
+      "errors": 0,
+      "statuses": {
+        "200": 1600
+      },
+      "elapsed_ms": 612.77,
+      "rps": 2611.11,
+      "p50_ms": 318.57,
+      "p95_ms": 346.37,
+      "p99_ms": 349.22,
+      "max_ms": 350.34,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1700,
+      "requests": 1700,
+      "http200_valid_json": 1700,
+      "errors": 0,
+      "statuses": {
+        "200": 1700
+      },
+      "elapsed_ms": 775.84,
+      "rps": 2191.16,
+      "p50_ms": 452.54,
+      "p95_ms": 494.41,
+      "p99_ms": 497.87,
+      "max_ms": 498.93,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1800,
+      "requests": 1800,
+      "http200_valid_json": 1800,
+      "errors": 0,
+      "statuses": {
+        "200": 1800
+      },
+      "elapsed_ms": 822.08,
+      "rps": 2189.57,
+      "p50_ms": 430.36,
+      "p95_ms": 476.29,
+      "p99_ms": 482.05,
+      "max_ms": 487.84,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1900,
+      "requests": 1900,
+      "http200_valid_json": 1900,
+      "errors": 0,
+      "statuses": {
+        "200": 1900
+      },
+      "elapsed_ms": 763.16,
+      "rps": 2489.64,
+      "p50_ms": 405.59,
+      "p95_ms": 442.13,
+      "p99_ms": 445.03,
+      "max_ms": 447.37,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 2000,
+      "requests": 2000,
+      "http200_valid_json": 2000,
+      "errors": 0,
+      "statuses": {
+        "200": 2000
+      },
+      "elapsed_ms": 839.99,
+      "rps": 2380.98,
+      "p50_ms": 434.86,
+      "p95_ms": 515.54,
+      "p99_ms": 520.72,
+      "max_ms": 525.35,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    }
+  ],
+  "summary": {
+    "stages": 23,
+    "passed": 23,
+    "failed": 0,
+    "total_requests": 21080,
+    "total_successes": 21080
+  }
+}

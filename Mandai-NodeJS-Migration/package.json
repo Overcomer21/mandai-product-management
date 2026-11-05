@@ -1,0 +1,27 @@
+{
+  "name": "mandai-nodejs-migration",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test tests/*.test.js",
+    "check": "node --check src/server.js",
+    "db:preflight": "node scripts/check-real-sql.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "cors": "^2.8.5",
+    "mssql": "^11.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "argon2": "^0.44.0",
+    "redis": "^5.0.0",
+    "kafkajs": "^2.2.4",
+    "stripe": "^18.0.0",
+    "dotenv": "^16.4.7"
+  }
+}

@@ -1,0 +1,377 @@
+{
+  "test": "Node.js catalog finite-burst GET stress",
+  "source": "node_catalog_stress.mjs",
+  "timestamp": "2026-11-05T05:13:41.066Z",
+  "base": "http://127.0.0.1:51872",
+  "endpoint": "/api/products",
+  "read_only": true,
+  "levels": [
+    {
+      "level": 10,
+      "requests": 10,
+      "http200_valid_json": 10,
+      "errors": 0,
+      "statuses": {
+        "200": 10
+      },
+      "elapsed_ms": 91.62,
+      "rps": 109.15,
+      "p50_ms": 49.29,
+      "p95_ms": 74.86,
+      "p99_ms": 88.19,
+      "max_ms": 91.52,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 20,
+      "requests": 20,
+      "http200_valid_json": 20,
+      "errors": 0,
+      "statuses": {
+        "200": 20
+      },
+      "elapsed_ms": 45.78,
+      "rps": 436.92,
+      "p50_ms": 29.11,
+      "p95_ms": 39.29,
+      "p99_ms": 39.32,
+      "max_ms": 39.33,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 50,
+      "requests": 50,
+      "http200_valid_json": 50,
+      "errors": 0,
+      "statuses": {
+        "200": 50
+      },
+      "elapsed_ms": 106.29,
+      "rps": 470.39,
+      "p50_ms": 58.54,
+      "p95_ms": 91.94,
+      "p99_ms": 93.01,
+      "max_ms": 93.31,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 100,
+      "requests": 100,
+      "http200_valid_json": 100,
+      "errors": 0,
+      "statuses": {
+        "200": 100
+      },
+      "elapsed_ms": 171.86,
+      "rps": 581.88,
+      "p50_ms": 82.95,
+      "p95_ms": 140.25,
+      "p99_ms": 146.14,
+      "max_ms": 146.76,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 200,
+      "requests": 200,
+      "http200_valid_json": 200,
+      "errors": 0,
+      "statuses": {
+        "200": 200
+      },
+      "elapsed_ms": 352.55,
+      "rps": 567.29,
+      "p50_ms": 146.2,
+      "p95_ms": 273.18,
+      "p99_ms": 299.25,
+      "max_ms": 303.23,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 300,
+      "requests": 300,
+      "http200_valid_json": 300,
+      "errors": 0,
+      "statuses": {
+        "200": 300
+      },
+      "elapsed_ms": 632.83,
+      "rps": 474.06,
+      "p50_ms": 328.4,
+      "p95_ms": 515.26,
+      "p99_ms": 526.39,
+      "max_ms": 529.78,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 400,
+      "requests": 400,
+      "http200_valid_json": 400,
+      "errors": 0,
+      "statuses": {
+        "200": 400
+      },
+      "elapsed_ms": 771.26,
+      "rps": 518.63,
+      "p50_ms": 321.09,
+      "p95_ms": 635.12,
+      "p99_ms": 676.88,
+      "max_ms": 691.22,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 500,
+      "requests": 500,
+      "http200_valid_json": 500,
+      "errors": 0,
+      "statuses": {
+        "200": 500
+      },
+      "elapsed_ms": 915.62,
+      "rps": 546.08,
+      "p50_ms": 462.57,
+      "p95_ms": 758.73,
+      "p99_ms": 789.75,
+      "max_ms": 798.14,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 600,
+      "requests": 600,
+      "http200_valid_json": 600,
+      "errors": 0,
+      "statuses": {
+        "200": 600
+      },
+      "elapsed_ms": 939.11,
+      "rps": 638.91,
+      "p50_ms": 519.02,
+      "p95_ms": 786.2,
+      "p99_ms": 800.49,
+      "max_ms": 805.36,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 700,
+      "requests": 700,
+      "http200_valid_json": 700,
+      "errors": 0,
+      "statuses": {
+        "200": 700
+      },
+      "elapsed_ms": 1155.7,
+      "rps": 605.69,
+      "p50_ms": 663.03,
+      "p95_ms": 970.35,
+      "p99_ms": 997.49,
+      "max_ms": 1007.06,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 800,
+      "requests": 800,
+      "http200_valid_json": 800,
+      "errors": 0,
+      "statuses": {
+        "200": 800
+      },
+      "elapsed_ms": 1150.8,
+      "rps": 695.17,
+      "p50_ms": 604.17,
+      "p95_ms": 940.55,
+      "p99_ms": 979.27,
+      "max_ms": 990.72,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 900,
+      "requests": 900,
+      "http200_valid_json": 900,
+      "errors": 0,
+      "statuses": {
+        "200": 900
+      },
+      "elapsed_ms": 1328.96,
+      "rps": 677.22,
+      "p50_ms": 650.6,
+      "p95_ms": 1073.18,
+      "p99_ms": 1143.7,
+      "max_ms": 1152.28,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1000,
+      "requests": 1000,
+      "http200_valid_json": 1000,
+      "errors": 0,
+      "statuses": {
+        "200": 1000
+      },
+      "elapsed_ms": 1875.36,
+      "rps": 533.23,
+      "p50_ms": 879.34,
+      "p95_ms": 1500.65,
+      "p99_ms": 1580.74,
+      "max_ms": 1624.69,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1100,
+      "requests": 1100,
+      "http200_valid_json": 1100,
+      "errors": 0,
+      "statuses": {
+        "200": 1100
+      },
+      "elapsed_ms": 1968.33,
+      "rps": 558.85,
+      "p50_ms": 921.87,
+      "p95_ms": 1503.2,
+      "p99_ms": 1705.68,
+      "max_ms": 1709.83,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1200,
+      "requests": 1200,
+      "http200_valid_json": 1200,
+      "errors": 0,
+      "statuses": {
+        "200": 1200
+      },
+      "elapsed_ms": 1869.67,
+      "rps": 641.82,
+      "p50_ms": 798.94,
+      "p95_ms": 1523.97,
+      "p99_ms": 1592.93,
+      "max_ms": 1604.53,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1300,
+      "requests": 1300,
+      "http200_valid_json": 1300,
+      "errors": 0,
+      "statuses": {
+        "200": 1300
+      },
+      "elapsed_ms": 1712.51,
+      "rps": 759.12,
+      "p50_ms": 678.91,
+      "p95_ms": 1384.02,
+      "p99_ms": 1423.13,
+      "max_ms": 1440.04,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1400,
+      "requests": 1400,
+      "http200_valid_json": 1400,
+      "errors": 0,
+      "statuses": {
+        "200": 1400
+      },
+      "elapsed_ms": 1831.52,
+      "rps": 764.39,
+      "p50_ms": 852.12,
+      "p95_ms": 1498.64,
+      "p99_ms": 1558.15,
+      "max_ms": 1572.34,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1500,
+      "requests": 1500,
+      "http200_valid_json": 1500,
+      "errors": 0,
+      "statuses": {
+        "200": 1500
+      },
+      "elapsed_ms": 1967.21,
+      "rps": 762.5,
+      "p50_ms": 754.41,
+      "p95_ms": 1586.4,
+      "p99_ms": 1666.55,
+      "max_ms": 1686.63,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1600,
+      "requests": 1600,
+      "http200_valid_json": 1600,
+      "errors": 0,
+      "statuses": {
+        "200": 1600
+      },
+      "elapsed_ms": 2676.23,
+      "rps": 597.86,
+      "p50_ms": 749.14,
+      "p95_ms": 2119.3,
+      "p99_ms": 2270.71,
+      "max_ms": 2317.06,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "PASS"
+    },
+    {
+      "level": 1700,
+      "requests": 1700,
+      "http200_valid_json": 1700,
+      "errors": 0,
+      "statuses": {
+        "200": 1700
+      },
+      "elapsed_ms": 3107,
+      "rps": 547.15,
+      "p50_ms": 1404.72,
+      "p95_ms": 2600.54,
+      "p99_ms": 2683.22,
+      "max_ms": 2708.27,
+      "health_status": 200,
+      "p95_target_ms": 2500,
+      "result": "FAIL"
+    }
+  ],
+  "summary": {
+    "stages": 20,
+    "passed": 19,
+    "failed": 1,
+    "total_requests": 15380,
+    "total_successes": 15380
+  }
+}

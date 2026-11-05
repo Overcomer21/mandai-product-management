@@ -1,0 +1,66 @@
+{
+  "test": "AC07/AC08 live SQL concurrency / no overselling",
+  "backend": "Mandai Node.js API / MandaiDB",
+  "execution_utc": "2026-11-05T14:37:09.491941+00:00",
+  "gateway": "http://127.0.0.1:51872",
+  "run_id": "af9fecbe5e03",
+  "result": "PASS",
+  "parameters": {
+    "attempts": 1000,
+    "initial_stock": 29,
+    "max_workers": 60
+  },
+  "product_id": 2127,
+  "observations": {
+    "active_product_verified": true,
+    "attempts_completed": 1000,
+    "successful_orders": 29,
+    "rejected_requests": 971,
+    "unexpected_results": 0,
+    "unexpected_examples": [],
+    "http_status_counts": {
+      "409": 971,
+      "201": 29
+    },
+    "rejection_reason_counts": {
+      "Insufficient stock": 971
+    },
+    "unique_order_ids": 29,
+    "ending_stock": 0,
+    "active_after_test": true,
+    "elapsed_seconds": 4.127
+  },
+  "order_ids": [
+    3403,
+    3399,
+    3398,
+    3425,
+    3401,
+    3400,
+    3402,
+    3426,
+    3424,
+    3406,
+    3404,
+    3405,
+    3408,
+    3410,
+    3407,
+    3409,
+    3411,
+    3412,
+    3422,
+    3413,
+    3415,
+    3417,
+    3418,
+    3419,
+    3420,
+    3421,
+    3416,
+    3414,
+    3423
+  ],
+  "failure_detail": "",
+  "scope": "Only overselling. No Stripe, cancellations, inventory restoration or existing product mutation."
+}
