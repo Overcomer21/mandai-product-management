@@ -77,7 +77,6 @@ The test runner uses the term *deactivation* in its cleanup messages, but the ob
 ## 5. Performance benchmark — reference links
 
 - **[Catalog API performance benchmark: FastAPI vs Node.js](fastapi_vs_nodejs_benchmark.md)** — comparative evidence from separate local deployments, provided as a performance reference only; the functional AC sign-off is based on the **Node.js implementation**.
-- **[Mandai Product Catalog API load test report](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md)** — supplementary load-test evidence and methodology.
 
 For the recorded side-by-side read-only catalog test, **Node.js passed 23/23 concurrency levels and 17,435/17,435 HTTP requests**, with zero HTTP errors. Peak measured Node.js throughput was **995.36 RPS**, and at 2,000 concurrent requests the measured Node.js P95 latency was **121.95 ms**, under the stated test threshold of 2,500 ms. Performance numbers are specific to that local host and deployed configuration; they are **not forecasts for Azure/AWS or claims of linear 4-instance speedup**. Separate K6 TCP failures were excluded from the comparative Python benchmark and remain a distinct reliability consideration.
 
@@ -85,7 +84,7 @@ The separate recorded Node.js catalog stress result of **2,000/2,000 HTTP 200**,
 
 ## 6. Evidence index and traceability
 
-The following outputs were generated **on the tester's Windows system**, not included in this package. They are real evidence references, **not clickable file links** until copied into an accessible evidence folder:
+The evidence index distinguishes test outputs recorded on the tester's Windows system from artifacts included in this package. The overselling evidence files are included; other local test outputs and console logs are referenced for traceability but were not supplied with this package:
 
 | ID | Evidence file / command | Supports |
 |---|---|---|
@@ -100,7 +99,6 @@ The following outputs were generated **on the tester's Windows system**, not inc
 | E07 | Tester-confirmed Flutter UI flows, Stripe Test Mode, Android return, My Purchases, Admin catalog changes | AC01/03/04/06; manual functional acceptance. |
 | E08 | Tester-provided read-only SQL and repository code inspection for products #2121/#2122/#2124 | CRUD referential integrity and data-preservation policy. |
 | E09 | [FastAPI vs Node.js catalog benchmark](fastapi_vs_nodejs_benchmark.md) | Performance reference (not a functional acceptance gate). |
-| E10 | [Product Catalog load-test report](MANDAI_PRODUCT_CATALOG_API_LOAD_TEST_REPORT.md) | Supplemental performance methodology. |
 
 For an external reviewer, the **overselling JSON and Markdown evidence are included in this package**. Preserve the two other API test JSON outputs (`nodejs-ac-baseline.json`, `nodejs-ac-crud-purchase.json`), the raw `npm test` log, and optional screenshots or recordings of the manual Flutter/Stripe flows when available; these were not uploaded with the present package. Do not expose passwords, bearer tokens, Stripe signing secrets or other credentials in those artifacts.
 
