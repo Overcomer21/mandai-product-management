@@ -1,8 +1,7 @@
 # Mandai E-Merchandise — Node.js Migration Candidate
 
-**Independent implementation:** Mandai Wildlife Group coding assessment, Question 5 (not an official Mandai Wildlife Group product).
-**Current documentation focus:** Node.js Docker service candidate with Flutter UI, Redis, NGINX, Microsoft SQL Server and Stripe **Test Mode**.
-**Documentation updated:** 6 November 2026.
+**Independent implementation:** Mandai Wildlife Group coding assessment, Question 5 (not an official Mandai Wildlife Group product).  
+**Current documentation focus:** Node.js Docker service candidate with Flutter UI, Redis, NGINX, Microsoft SQL Server and Stripe **Test Mode**.  
 **Status:** Non-production proof of concept; AC01–AC08 functional acceptance is the current verification focus. Full Stripe payment lifecycle validation is deferred, as described below.
 
 ## Overview
@@ -40,7 +39,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for service boundaries, transactional sto
 - Catalog read APIs: products, count, categories, detail, filtering, ordering and offset pagination.
 - Administrator create/read/update/delete (CRUD), subject to role checks and SQL Server referential-integrity protection; deletion of transaction-linked products is rejected.
 - Authenticated purchases and cart checkout with server-side pricing and conditional SQL stock updates.
-- Stripe Test Mode checkout/session, reconciliation, cancellation and webhook code paths are implemented or partially exercised; the full payment lifecycle is **not yet end-to-end validated** (see scope note below).
+- Stripe payment is used in **Test Mode as a simulation**, with payment **assumed successful for the demonstrated flow**. Payment cancellation and order cancellation are outside the current acceptance scope.
 - SQL Server transactions and idempotency checks; `PaymentOutbox` records inventory/payment events.
 - Redis generation-based invalidation **supported by the cache**, while full propagation through all Stripe/Flutter paths is subject to final deployed validation.
 - Flutter responsive catalog, shopping cart, orders, payment-return deep link and incremental catalog loading. Mobile/desktop claims are platform-dependent.
@@ -49,13 +48,11 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for service boundaries, transactional sto
 
 **Current priority: AC01–AC08 functional acceptance.** Verification concentrates on public/customer catalog operations, filtering/sorting/pagination, administrator CRUD and authorization, customer purchase/order behavior, server-side price and stock validation, transactional idempotency, and prevention of overselling. The Node.js acceptance evidence includes the recorded **44/44 executed API checks passing**, **11 Flutter unit/widget tests passing**, and the **1,000-attempt SQL concurrency retest** (29 accepted, 971 out-of-stock rejections, zero unexpected outcomes, final stock zero). See [APPLICATION_ACCEPTANCE_TEST_RESULTS.md](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) for the test-specific evidence and qualifications. These results are **local functional checks**, not production certification.
 
-**Stripe payment end-to-end lifecycle: OUT OF SCOPE for the current completion claim.** The application includes Stripe **Test Mode** integration and selected checkout/payment, reconciliation, cancellation and inventory-restoration tests have been recorded. However, those partial results **do not establish comprehensive end-to-end payment lifecycle correctness**, including all asynchronous webhook sequences, duplicate/out-of-order events, external provider/network failures, uncertain session creation, abandoned or expired sessions, payment-state reconciliation, exactly-once stock release and recovery after interruptions.
-
-**Further testing and potentially targeted code modifications are required** before the Stripe payment lifecycle can be considered fully verified. Any changes should preserve confirmed payment/stock safety rules, idempotency and order history, and be validated with integration, failure-injection and regression tests. This limitation **does not negate the separately documented AC01–AC08 checks**; it expressly limits what is being claimed about full Stripe processing.
+**Stripe payment simulation scope:** Stripe payment is used in **Test Mode as a simulation**, with payment **assumed successful for the demonstrated flow**. The complete Stripe payment end-to-end lifecycle, including **payment cancellation and order cancellation**, remains **out of scope** and requires further testing and, if necessary, targeted modifications. This does not change the separately recorded AC01–AC08 acceptance results.
 
 ## Recorded testing — important distinction
 
-**Node.js vs FastAPI paired catalog comparison, 5 Nov 2026:** On the same local Windows host, in separate Docker/NGINX configurations, **both** passed 23/23 Python read-only load levels, with 17,435/17,435 successful GETs and zero errors per implementation. **FastAPI led in RPS at 19/23 levels and P95 at 17/23 levels.** Peak measured RPS was **1,105.07 FastAPI vs 995.36 Node.js**. Full report: [fastapi_vs_nodejs_benchmark.md](fastapi_vs_nodejs_benchmark.md).
+**Node.js vs FastAPI paired catalog benchmark:** The benchmark compares **throughput (requests per second, RPS), concurrency (23 paired load levels), and latency (P95 response time)** for the read-only catalog API. Both implementations completed **23/23 load levels**, serving **17,435/17,435 HTTP 200 responses each**, with **zero HTTP errors**. **FastAPI achieved higher throughput at 19 of 23 levels and lower P95 latency at 17 of 23 levels**. Peak observed throughput was **1,105.07 RPS for FastAPI** and **995.36 RPS for Node.js** (at different load levels). At **2,000 concurrent workers**, FastAPI recorded **1,042.74 RPS / 117.56 ms P95**, compared with **991.78 RPS / 121.95 ms P95** for Node.js. **Based on these test results, FastAPI demonstrated better overall performance under the tested configurations.** This is an observed result for the local Windows/Docker/NGINX catalog workload, not a general claim that FastAPI is always faster than Node.js. Full measurements: [fastapi_vs_nodejs_benchmark.md](fastapi_vs_nodejs_benchmark.md).
 
 **Node.js Stripe/SQL local diagnostic:** A real `settle()` call on order 3380 returned `settled` in a rolled-back transaction. Later **read-only** DB checks reported orders **3380–3382** as `completed`, attempts `paid`, each with **one** `approved_test` payment. These were sandbox payment records. This does not establish production payment readiness.
 
@@ -86,21 +83,12 @@ The Flutter web-server command prints a local URL to open manually in a separate
 
 For Android Emulator, the typical host alias is `10.0.2.2`: `--dart-define=API_BASE=http://10.0.2.2:51872`. Android cleartext policy, Stripe return URL/deep linking, emulator/ADB availability and SDK configuration need separate checks. The exact supported Flutter command should be checked against the installed SDK and project settings.
 
-## Stripe Test Mode operational safety
-
-- Test checkout events **do not transfer live funds**. Never publish API keys, webhook signing material, JWT secrets or customer data.
-- The payment-return browser page is **not proof of payment**; an authenticated reconciliation or verified Stripe webhook must determine the result.
-- A paid checkout must not be canceled or have reserved inventory returned. If a session is confirmed expired/unpaid, release must occur at most once.
-- If the external Stripe result is unknown, stop retrying new payments and reconcile the existing attempt first.
-- Order and payment records must not be deleted simply to clear a pending UI state.
-
 ## Documentation index
 
 - [SPEC.md](SPEC.md) — requirements and assessment scope of the Node.js migration candidate.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — reviewed architecture, design decisions, data safety and benchmark implications.
 - [APPLICATION_ACCEPTANCE_TEST_RESULTS.md](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) — evidence matrix separating Node.js and historical FastAPI outcomes.
 - [fastapi_vs_nodejs_benchmark.md](fastapi_vs_nodejs_benchmark.md) — unmodified measured metrics in engineering interpretation.
-- [SOURCE_MANIFEST.md](SOURCE_MANIFEST.md) — source provenance, evidence classification and limitations.
 
 ## Production qualification
 
