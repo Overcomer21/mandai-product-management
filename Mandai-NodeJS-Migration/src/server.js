@@ -16,10 +16,17 @@ import {StripeGateway} from './infrastructure/stripe-gateway.js';
 import {StripeCheckoutService} from './application/stripe-checkout-service.js';
 const mode=process.env.SERVICE_MODE||'all';
 const cache=process.env.REDIS_URL?new RedisCatalogCache(process.env.REDIS_URL,Number(process.env.CATALOG_CACHE_TTL_SECONDS||5)):null;
-const guard=process.env.LOGIN_GUARD_REDIS_URL?new RedisLoginGuard(process.env.LOGIN_GUARD_REDIS_URL):null;
+const guardUrl=process.env.LOGIN_GUARD_REDIS_URL||process.env.REDIS_URL;
+// A login service without a shared guard must never accept credentials unthrottled.
+const guard=guardUrl?new RedisLoginGuard(guardUrl):null;
 const services={catalog:new CatalogService(new SqlCatalogRepository(),cache),identity:new IdentityService(new SqlIdentityRepository(),guard),orders:new OrderService(new SqlOrderRepository(),cache),stripeCheckout:new StripeCheckoutService(new SqlStripeRepository(),new StripeGateway(),cache)};
 export function createApp(){
- const app=express();app.disable('x-powered-by');app.use(cors({origin:(process.env.CORS_ORIGINS||'http://localhost:3000,http://localhost:8080').split(','),methods:['GET','POST','PUT','DELETE'],allowedHeaders:['Authorization','Content-Type','Idempotency-Key']}));
+ const app=express();
+ if ((mode==='all'||mode==='identity')&&!guard) throw new Error('Identity service requires LOGIN_GUARD_REDIS_URL or REDIS_URL');
+ app.disable('x-powered-by');
+ // Only the directly adjacent NGINX gateway is trusted to report the client IP.
+ app.set('trust proxy', 1);
+ app.use(cors({origin:(process.env.CORS_ORIGINS||'http://localhost:3000,http://localhost:8080').split(','),methods:['GET','POST','PUT','DELETE'],allowedHeaders:['Authorization','Content-Type','Idempotency-Key']}));
  if(mode==='all'||mode==='commerce')app.post('/api/stripe-checkout/webhook',express.raw({type:'application/json',limit:'256kb'}),async(req,res,next)=>{try{if(process.env.STRIPE_NODE_WRITES_ENABLED!=='true')return res.status(503).json({detail:'Node Stripe writes disabled pending integration validation'});res.json(await services.stripeCheckout.webhook(req.body,req.headers['stripe-signature']))}catch(e){next(e)}});
  app.use(express.json({limit:'256kb'}));
  app.get('/health',async(req,res)=>{try{await connect();res.status(200).json({status:'ok'});}catch{res.status(503).json({status:'unavailable'});}});

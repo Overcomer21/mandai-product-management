@@ -24,8 +24,8 @@ final class ProductSaved extends ProductEvent {
   List<Object?> get props => [input, id];
 }
 
-final class ProductDeactivated extends ProductEvent {
-  const ProductDeactivated(this.id);
+final class ProductDeleted extends ProductEvent {
+  const ProductDeleted(this.id);
   final int id;
   @override
   List<Object?> get props => [id];
@@ -63,10 +63,10 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
             error: error.toString()));
       }
     });
-    on<ProductDeactivated>((event, emit) async {
+    on<ProductDeleted>((event, emit) async {
       try {
-        await _repository.deactivate(event.id);
-        await _load(state.admin, emit, notice: 'Product deactivated');
+        await _repository.delete(event.id);
+        await _load(state.admin, emit, notice: 'Product deleted');
       } catch (error) {
         emit(ProductState(
             status: ProductStatus.failure,

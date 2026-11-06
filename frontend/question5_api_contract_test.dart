@@ -38,7 +38,7 @@ void main() {
       description: '', price: '7.00', stock: 1, isActive: true));
     await repo.save(const ProductInput(name: 'Q5', category: 'Tests',
       description: '', price: '7.00', stock: 2, isActive: true), id: 41);
-    await repo.deactivate(41);
+    await repo.delete(41);
     expect(calls, ['GET /api/admin/products', 'POST /api/admin/products',
       'PUT /api/admin/products/41', 'DELETE /api/admin/products/41']);
     api.close();

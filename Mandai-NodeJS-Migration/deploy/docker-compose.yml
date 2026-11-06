@@ -82,27 +82,42 @@ services:
 
   commerce1:
     <<: *app
+    depends_on:
+      - redis
     environment:
       SERVICE_MODE: commerce
       PORT: "8011"
+      REDIS_URL: redis://redis:6379
+      CATALOG_CACHE_TTL_SECONDS: "5"
 
   commerce2:
     <<: *app
+    depends_on:
+      - redis
     environment:
       SERVICE_MODE: commerce
       PORT: "8011"
+      REDIS_URL: redis://redis:6379
+      CATALOG_CACHE_TTL_SECONDS: "5"
 
   identity:
     <<: *app
+    depends_on:
+      - redis
     environment:
       SERVICE_MODE: identity
       PORT: "8011"
+      LOGIN_GUARD_REDIS_URL: redis://redis:6379
 
   admin:
     <<: *app
+    depends_on:
+      - redis
     environment:
       SERVICE_MODE: admin
       PORT: "8011"
+      REDIS_URL: redis://redis:6379
+      CATALOG_CACHE_TTL_SECONDS: "5"
 
 networks:
   mandai:

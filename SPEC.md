@@ -1,63 +1,86 @@
-# Mandai E-Merchandise — Node.js Candidate Functional and Technical Specification
+# Mandai E-Merchandise — Functional Specification (Question 5)
 
-**Assessment context:** Question 5, full-stack product management  
-**Document type:** Candidate implementation specification, revision 5 November 2026  
-**Important distinction:** Describes the Node.js migration candidate and documented requirements; **does not rewrite the historical submitted FastAPI implementation**.
+**Assessment:** Full-stack Product Management Application — Question 5
+**Scope:** Business and functional requirements for the Node.js candidate
+**Status:** Local assessment demonstration; not a production specification
 
-## 1. Scope and user journeys
+## 1. Objective
 
-**Customers:** Browse products; search/filter/sort and paginate; view details; authenticate; place items in a shopping cart; review quantities, server prices and delivery details; initiate authorized purchase or test-mode Stripe checkout; view and reconcile previous orders.
+Provide a full-stack product-management application with a backend API, an administrator inventory dashboard, and a customer-facing storefront. Enforce role-based administrative CRUD and secure customer purchases, while preventing race conditions and inventory overselling.
 
-**Administrators:** Authenticate, view inventory, create/update/deactivate product entries under server authorization rules, and preserve historical transactional references.
+This document specifies **what the application must do**, not how the technology is implemented. Database schema, concurrency strategy, component design, performance engineering, and technical trade-offs are documented in [ARCHITECTURE.md](ARCHITECTURE.md).
 
-**Platform:** Flutter frontend; NGINX gateway; Node.js services with service-role separation; Redis cache for read catalog operations; one existing SQL Server `MandaiDB`; Stripe **Test Mode**. Flutter deployment targets require independent build and behavior verification.
+## 2. Business roles and journeys
 
-## 2. Functional requirements
+### Guest
+- Browse the public product catalogue, view product details, and search, filter, and sort products.
+- View available products without signing in.
+- Cannot perform authenticated purchase operations or administrator actions.
 
-| ID | Requirement | Status/evidence |
+### Customer
+- Sign in and access the storefront.
+- Browse products, add items to a shopping cart, and adjust quantities.
+- Submit an authorized purchase using server-validated product prices, quantities, and stock availability.
+- View their own purchases and order history.
+
+### Administrator
+- Sign in to an authorized administrator dashboard.
+- View the product catalogue and inventory, including products not shown in the public storefront.
+- **Create, Read, Update, and Delete (CRUD)** product records through protected operations.
+- Update product details, prices, and stock quantities.
+- Receive an appropriate response if deletion is prohibited because an item is referenced by existing transactions.
+
+## 3. Functional requirements
+
+| ID | Business requirement | Expected behavior |
 |---|---|---|
-| FR01 | Public catalog with deterministic pagination, filters, sorting and detail | Node.js source referenced and paired GET load test recorded |
-| FR02 | Administrator inventory CRUD and role enforcement | Source/routing present; final Node.js end-to-end run totals not supplied |
-| FR03 | Customer authentication and purchase authorization | Source present; final Node.js integration totals not supplied |
-| FR04 | Server-side stock/price validation; atomic conditional decrement | SQL repository code reviewed |
-| FR05 | Idempotent checkout replay, distinguish same/different payload | Node.js fingerprint and session code reviewed; frontend key-state regression remains a test gate |
-| FR06 | Stripe sandbox checkout, paid-state reconciliation and expired/unpaid stock release | Source reviewed; selected local SQL/Stripe diagnostic evidence recorded |
-| FR07 | Catalog cache with bounded TTL and generation-based invalidation | `cache.js` source reviewed; deployed end-to-end cache propagation requires verification |
-| FR08 | Cart and inventory refresh following confirmed cancel/settlement | Flutter patch prepared; final UI+Redis end-to-end result not supplied |
-| FR09 | Auditability of payment and inventory transitions | `PaymentOutbox` writes reviewed; external publishing worker not established |
+| FR01 | Public product catalogue | Guests and customers can view and browse eligible merchandise. |
+| FR02 | Product discovery | Search, category filtering, sorting, product details, and pagination return consistent results. |
+| FR03 | Administrator inventory CRUD | Authorized administrators can create, read, update, and delete product records, subject to business and data-integrity rules. |
+| FR04 | Role-based access | Guests and customers cannot perform administrator CRUD. Only authenticated customers can submit customer purchases. |
+| FR05 | Shopping cart | Customers can add products, change quantities, and review purchases before submission. |
+| FR06 | Secure purchase | The system validates quantity, availability, price, and the authenticated customer's permission on the server. |
+| FR07 | Transaction consistency | A failed or duplicate purchase must not cause unintended duplicate orders or stock reductions. |
+| FR08 | Overselling prevention | Concurrent purchase requests must not sell more units than available in stock; unavailable stock must be rejected. |
+| FR09 | Inventory visibility | Product details, prices, and stock changes remain consistent across Admin, Customer, and Guest views as applicable. |
+| FR10 | Purchase history | Authenticated customers can view their own purchases and order statuses within the demonstrated scope. |
 
-## 3. Data and transaction rules
+## 4. Acceptance criteria (AC01–AC08)
 
-- `MandaiDB` is the sole authoritative transactional database, including Users, Products, Orders, OrderItems, Payments, StripeCheckoutAttempts, StripeCheckoutEvents and PaymentOutbox; do not introduce another authoritative datastore.
-- Use parameterized `mssql` SQL queries. Conditional stock update must succeed before recording a reservation.
-- Commit business state and related outbox row in the same SQL transaction, or roll back on failure.
-- Return reserved inventory **only after** session status is verified as expired/unpaid (or independently verified unpaid async failure in the reviewed code) and after confirming no payment already exists; prevent a second release.
-- Never equate a browser redirect with successful payment or authorized stock release.
-- Cache invalidation is an eventual consistency mechanism, not a substitute for SQL correctness.
+The AC01–AC08 descriptions below follow the recorded local Node.js acceptance matrix. They are verification categories for the Question 5 business requirements, not additional technology mandates from the original assessment prompt.
 
-## 4. Security and payment requirements
+| AC | Acceptance criterion | Acceptance expectation |
+|---|---|---|
+| **AC01** | Full-stack functionality | Customer and administrator interfaces interact correctly with the backend, with functional UI flows. |
+| **AC02** | Product API and catalogue | Product listing, details, search, category filters, sorting, pagination, and invalid-input handling behave correctly. |
+| **AC03** | Administrator CRUD | Authenticated administrators can create, read, update, and delete eligible test products; inventory changes are reflected correctly. |
+| **AC04** | Customer storefront and checkout demonstration | Product browsing, shopping cart, quantity changes, and demonstrated purchase flows operate as expected. |
+| **AC05** | Authentication and authorization | Administrator operations are denied to guests and customers; customer purchase operations are limited to eligible authenticated users. |
+| **AC06** | Secure purchase | Product availability, quantity, and authoritative server-side pricing are enforced; successful demonstration purchases are recorded and visible in order history. |
+| **AC07** | Transaction consistency and concurrency | Identical purchase retries do not duplicate orders or stock reductions; conflicting repeated requests are rejected; failed operations preserve inventory integrity. |
+| **AC08** | Overselling prevention | Under simultaneous purchase attempts, accepted purchases never exceed available stock, rejected purchases do not reduce stock, and the final stock remains valid. |
 
-JWT authentication and role enforcement must be performed on the server. Validate all input and money values server-side. Test-mode-only Stripe keys and sessions must be used in the demo; verify webhook signatures with the exact raw request body; reject live events. Configure CORS based on trusted frontend origins and HTTPS/secret management for hosted environments. Do not store any credentials in repository documentation.
+## 5. Scope of Stripe payment simulation
 
-## 5. Non-functional requirements and acceptance thresholds
+**Stripe payment is used in Test Mode as a simulation, with payment assumed successful for the demonstrated flow. The complete Stripe payment end-to-end lifecycle remains out of scope and requires further testing and, if necessary, targeted modifications.**
 
-- **Measured local catalog target:** 100% HTTP 200, zero errors, P95 <= 2,500 ms for the supplied one-GET-per-worker Python stages. This is a **test-specific target**, not a production SLA.
-- Support responsive Flutter layouts and incremental pagination; measure mobile frame/render performance separately from API latency.
-- Monitor availability, SQL pool usage, Redis hit ratio/TTL, payment state transitions and webhook errors before hosted deployment.
-- Avoid claiming capacity for 2,000 sustained users from a burst of 2,000 one-shot requests.
+**Payment cancellation and order cancellation are outside the current acceptance scope.** These exclusions do not change the requirements for secure purchases, inventory consistency, idempotency, and overselling prevention in AC01–AC08. Any cancellation-related functionality already present or tested separately is not claimed as a completed acceptance deliverable here.
 
-## 6. Acceptance criteria and traceability
+## 6. Acceptance evidence and limitations
 
-The prior submission's **AC01–AC08 PASS** results are historical FastAPI evidence. The Node.js candidate targets equivalent user-visible capabilities, but it needs its own final-build acceptance suite. Node.js current evidence is a paired read-only catalog benchmark (23/23 levels; 17,435/17,435 GETs; zero errors), source-reviewed tests, real SQL dry-run rollback, and three verified persisted test-mode payment outcomes. See [APPLICATION_ACCEPTANCE_TEST_RESULTS.md](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) for explicit evidence grades and gaps.
+The recorded Node.js local verification includes:
 
-The original assessment additionally required a public source repository and technical architecture/spec documentation. This updated document does **not** imply that a new Node.js version has been submitted or pushed.
+- **44 PASS / 0 FAIL** among checks executed in the expanded API acceptance run.
+- **11 passing Flutter unit/widget tests** in the recorded run.
+- **1,000 concurrent purchase attempts** against stock of 29 units: **29 accepted**, **971 rejected** for insufficient stock, **zero unexpected outcomes**, and final stock **0**.
+- Tester-confirmed administrator CRUD and catalogue consistency across administrator, customer, and guest flows.
 
-## 7. Known constraints and exclusions
+These are results from the documented local tests and manual confirmations, not a claim that all tests were rerun for this specification revision. The complete Stripe payment lifecycle and production readiness are **not** covered by the acceptance claim.
 
-- Shared SQL Server database; no claim of independent per-service persistence or distributed ACID transaction with Stripe.
-- Stripe Test Mode only; no real payment charge, refund, tax or payment-provider certification.
-- No evidence of a deployed Kafka broker or guaranteed asynchronous event publisher despite transactional `PaymentOutbox` writes.
-- No supplied Azure/AWS test results; performance and security must be revalidated in hosting environments.
-- Cache refresh, cart pagination edge cases, mobile return/deep-link, idempotency key recovery and multi-service race tests are outstanding final-build gates.
+For exact test evidence, distinctions between automated and manual verification, and qualifications, see [APPLICATION_ACCEPTANCE_TEST_RESULTS.md](APPLICATION_ACCEPTANCE_TEST_RESULTS.md).
 
-**Implementation references:** [ARCHITECTURE.md](ARCHITECTURE.md), [README.md](README.md), [SOURCE_MANIFEST.md](SOURCE_MANIFEST.md).
+## 7. Deliverables and documentation
+
+Question 5 requests a public GitHub repository and root-level `SPEC.md` or `ARCHITECTURE.md` documenting the database schema, concurrency strategy, and technical trade-offs. The repository and this functional specification cover the application requirements; technical design details are deliberately located in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+**Related documents:** [README.md](README.md) · [ARCHITECTURE.md](ARCHITECTURE.md) · [APPLICATION_ACCEPTANCE_TEST_RESULTS.md](APPLICATION_ACCEPTANCE_TEST_RESULTS.md)

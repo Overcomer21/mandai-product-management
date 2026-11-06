@@ -13,7 +13,7 @@ class CatalogView extends StatelessWidget {
     required this.onRefresh,
     required this.onAdd,
     required this.onEdit,
-    required this.onDeactivate,
+    required this.onDelete,
     required this.onBuy,
   });
 
@@ -23,7 +23,7 @@ class CatalogView extends StatelessWidget {
   final Future<void> Function() onRefresh;
   final VoidCallback onAdd;
   final ValueChanged<Product> onEdit;
-  final ValueChanged<Product> onDeactivate;
+  final ValueChanged<Product> onDelete;
   final ValueChanged<Product> onBuy;
 
   @override
@@ -157,7 +157,7 @@ class CatalogView extends StatelessWidget {
                       product: products[index],
                       admin: admin,
                       onEdit: onEdit,
-                      onDeactivate: onDeactivate,
+                      onDelete: onDelete,
                       onBuy: onBuy,
                     ),
                     childCount: products.length,

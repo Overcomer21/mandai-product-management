@@ -10,14 +10,14 @@ class ProductCard extends StatelessWidget {
     required this.product,
     required this.admin,
     required this.onEdit,
-    required this.onDeactivate,
+    required this.onDelete,
     required this.onBuy,
   });
 
   final Product product;
   final bool admin;
   final ValueChanged<Product> onEdit;
-  final ValueChanged<Product> onDeactivate;
+  final ValueChanged<Product> onDelete;
   final ValueChanged<Product> onBuy;
 
   @override
@@ -135,10 +135,10 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Deactivate product',
+                    tooltip: 'Delete product',
                     onPressed:
-                        product.isActive ? () => onDeactivate(product) : null,
-                    icon: const Icon(Icons.archive_outlined),
+                        () => onDelete(product),
+                    icon: const Icon(Icons.delete_outline),
                   ),
                 ],
               )

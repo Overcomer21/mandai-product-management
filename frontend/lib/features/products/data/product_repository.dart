@@ -20,7 +20,7 @@ class ProductRepository {
         data: input.toJson());
   }
 
-  Future<void> deactivate(int id) async {
+  Future<void> delete(int id) async {
     await _api.request('DELETE', '/api/admin/products/$id');
   }
 }

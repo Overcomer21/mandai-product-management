@@ -185,10 +185,28 @@ class AppShell extends StatelessWidget {
                               },
                               onAdd: () => _edit(context, null),
                               onEdit: (product) => _edit(context, product),
-                              onDeactivate: (product) {
-                                context.read<ProductBloc>().add(
-                                      ProductDeactivated(product.id),
-                                    );
+                              onDelete: (product) async {
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder: (dialogContext) => AlertDialog(
+                                    title: const Text('Delete product?'),
+                                    content: const Text(
+                                      'This permanently deletes a product only if it has no transaction history. Products referenced by orders cannot be deleted.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(dialogContext, false),
+                                        child: const Text('Cancel'),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () => Navigator.pop(dialogContext, true),
+                                        child: const Text('Delete'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirmed == true && context.mounted) {
+                                  context.read<ProductBloc>().add(ProductDeleted(product.id));
+                                }
                               },
                               onBuy: (product) => _buy(context, product),
                             );
