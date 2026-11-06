@@ -99,7 +99,6 @@ For Android Emulator, the typical host alias is `10.0.2.2`: `--dart-define=API_B
 - [SPEC.md](SPEC.md) — requirements and assessment scope of the Node.js migration candidate.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — reviewed architecture, design decisions, data safety and benchmark implications.
 - [APPLICATION_ACCEPTANCE_TEST_RESULTS.md](APPLICATION_ACCEPTANCE_TEST_RESULTS.md) — evidence matrix separating Node.js and historical FastAPI outcomes.
-- [LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md](LAZY_LOADING_PERFORMANCE_TEST_RESULTS.md) — pagination, historical SQL benchmark and remaining Node.js/Flutter validation.
 - [fastapi_vs_nodejs_benchmark.md](fastapi_vs_nodejs_benchmark.md) — unmodified measured metrics in engineering interpretation.
 - [SOURCE_MANIFEST.md](SOURCE_MANIFEST.md) — source provenance, evidence classification and limitations.
 
